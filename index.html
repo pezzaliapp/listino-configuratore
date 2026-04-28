@@ -18,6 +18,9 @@ button{border:0;border-radius:14px;background:var(--brand);color:white;padding:1
 button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
 button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.pageBtn{background:#fff;color:#111827;border:1px solid var(--line);padding:7px 10px;border-radius:10px;font-weight:850;min-width:42px}
+button.pageBtn:hover{border-color:#111827;background:#f9fafb}
+.importGrid{display:grid;gap:12px}
 .app{max-width:1440px;margin:0 auto;padding:18px}
 .hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:28px;padding:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:end}
 .hero h1{margin:0;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em}
@@ -94,15 +97,21 @@ tr:hover td{background:#fafafa}
   <section class="hero">
     <div>
       <h1>Configuratore Listino</h1>
-      <p>Carica un file Excel o CSV. I dati restano salvati solo sul tuo dispositivo e non vengono inviati a server.</p>
+      <p>Carica Excel/CSV e PDF dalla app. I file restano salvati solo nel browser di questo dispositivo: non vengono pubblicati su GitHub e non vengono inviati a server esterni.</p>
     </div>
-    <div class="importBox">
-      <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
-      <div id="status" class="status">Nessun listino caricato.</div>
+    <div class="importBox importGrid">
+      <div>
+        <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
+        <div id="status" class="status">Nessun listino caricato.</div>
+      </div>
+      <div>
+        <label class="fileLabel">Carica listino PDF<input id="pdfFile" type="file" accept="application/pdf,.pdf"></label>
+        <div id="pdfStatus" class="status">Nessun PDF caricato.</div>
+      </div>
     </div>
   </section>
 
-  <div id="privacyNotice" class="notice hide">Listino salvato localmente su questo dispositivo. Puoi cancellarlo con il pulsante “Cancella dati locali”.</div>
+  <div id="privacyNotice" class="notice hide">Listino e PDF salvati localmente su questo dispositivo. Puoi cancellarli con il pulsante “Cancella dati locali”.</div>
 
   <main class="grid">
     <section class="panel">
@@ -160,7 +169,7 @@ tr:hover td{background:#fafafa}
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 const els={
-  file:document.getElementById('file'),status:document.getElementById('status'),tbody:document.getElementById('tbody'),
+  file:document.getElementById('file'),pdfFile:document.getElementById('pdfFile'),status:document.getElementById('status'),pdfStatus:document.getElementById('pdfStatus'),tbody:document.getElementById('tbody'),
   q:document.getElementById('q'),fam:document.getElementById('fam'),cat:document.getElementById('cat'),pag:document.getElementById('pag'),
   chips:document.getElementById('chips'),kArt:document.getElementById('kArt'),kFam:document.getElementById('kFam'),kQuote:document.getElementById('kQuote'),
   quoteList:document.getElementById('quoteList'),discount:document.getElementById('discount'),markup:document.getElementById('markup'),
@@ -168,6 +177,65 @@ const els={
   privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck')
 };
 let rows=[],filtered=[],quote=[];
+const DB_NAME='listino_configuratore_PRO_db';
+const DB_STORE='files';
+let cachedPdfUrl=null;
+function openDb(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function idbSet(keyName,value){
+  const db=await openDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).put(value,keyName);
+    tx.oncomplete=()=>{db.close();resolve();};
+    tx.onerror=()=>{db.close();reject(tx.error);};
+  });
+}
+async function idbGet(keyName){
+  const db=await openDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(DB_STORE,'readonly');
+    const req=tx.objectStore(DB_STORE).get(keyName);
+    req.onsuccess=()=>{db.close();resolve(req.result);};
+    req.onerror=()=>{db.close();reject(req.error);};
+  });
+}
+async function idbDelete(keyName){
+  const db=await openDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).delete(keyName);
+    tx.oncomplete=()=>{db.close();resolve();};
+    tx.onerror=()=>{db.close();reject(tx.error);};
+  });
+}
+async function updatePdfStatus(){
+  try{
+    const pdf=await idbGet('listino_pdf');
+    els.pdfStatus.textContent=pdf?`PDF caricato: ${pdf.name}`:'Nessun PDF caricato.';
+    if(pdf) els.privacyNotice.classList.remove('hide');
+  }catch(e){els.pdfStatus.textContent='PDF non disponibile in questo browser.';}
+}
+async function getPdfUrl(){
+  const pdf=await idbGet('listino_pdf');
+  if(!pdf){alert('Carica prima il PDF del listino.');return null;}
+  if(cachedPdfUrl) URL.revokeObjectURL(cachedPdfUrl);
+  cachedPdfUrl=URL.createObjectURL(new Blob([pdf.data],{type:'application/pdf'}));
+  return cachedPdfUrl;
+}
+async function openPdfAtPage(pageNumber){
+  const page=Number(pageNumber);
+  if(!page || page<1){alert('Pagina PDF non valida.');return;}
+  const url=await getPdfUrl();
+  if(!url)return;
+  window.open(`${url}#page=${page}`,'_blank','noopener');
+}
 const money=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n||0));
 const norm=s=>(s??'').toString().trim();
 const key=s=>norm(s).toLowerCase().replace(/[àá]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u').replace(/[\s_\-.]/g,'');
@@ -246,6 +314,11 @@ function applyFilters(){
   );
   renderTable(); updateKpi();
 }
+function renderPageButtons(value){
+  const pages=pageTokens(value);
+  if(!pages.length) return escapeHtml(value);
+  return pages.map(p=>`<button class="pageBtn" data-page="${escapeAttr(p)}" title="Apri PDF a pagina ${escapeAttr(p)}">${escapeHtml(p)}</button>`).join(' ');
+}
 function renderTable(){
   if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';return;}
   if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';return;}
@@ -253,11 +326,12 @@ function renderTable(){
     <td class="code">${escapeHtml(r.codice)}</td>
     <td><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td>
     <td class="price">${money(r.prezzo)}</td>
-    <td>${escapeHtml(r.pagina)}</td>
+    <td>${renderPageButtons(r.pagina)}</td>
     <td><span class="small">${escapeHtml(r.categoria)}</span></td>
     <td><button class="addBtn" data-id="${r.id}">+</button></td>
   </tr>`).join('');
-  els.tbody.querySelectorAll('button').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)));
+  els.tbody.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)));
+  els.tbody.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(b.dataset.page));
 }
 function updateKpi(){
   els.kArt.textContent=filtered.length || rows.length;
@@ -312,10 +386,19 @@ els.file.onchange=async e=>{
   els.privacyNotice.classList.remove('hide');
   buildFilters(); applyFilters(); renderQuote();
 };
+els.pdfFile.onchange=async e=>{
+  const file=e.target.files[0]; if(!file)return;
+  if(file.type && file.type!=='application/pdf'){alert('Seleziona un file PDF valido.');return;}
+  const data=await file.arrayBuffer();
+  await idbSet('listino_pdf',{name:file.name,type:'application/pdf',data});
+  if(cachedPdfUrl){URL.revokeObjectURL(cachedPdfUrl);cachedPdfUrl=null;}
+  els.pdfStatus.textContent=`PDF caricato: ${file.name}`;
+  els.privacyNotice.classList.remove('hide');
+};
 ['q','fam','cat','pag'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
 ['discount','markup'].forEach(id=>document.getElementById(id).addEventListener('input',calcTotals));
 document.getElementById('sortPdf').onclick=()=>{rows.sort((a,b)=>pageNum(a.pagina)-pageNum(b.pagina)||a.codice.localeCompare(b.codice));save();applyFilters();};
-document.getElementById('clearLocal').onclick=()=>{if(confirm('Cancellare listino e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows_PRO');localStorage.removeItem('listino_configuratore_quote_PRO');location.reload();}};
+document.getElementById('clearLocal').onclick=async()=>{if(confirm('Cancellare listino, PDF e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows_PRO');localStorage.removeItem('listino_configuratore_quote_PRO');await idbDelete('listino_pdf');location.reload();}};
 document.getElementById('emptyQuote').onclick=()=>{quote=[];save();renderQuote();};
 document.getElementById('copyQuote').onclick=async()=>{await navigator.clipboard.writeText(quoteText());alert('Testo preventivo copiato');};
 document.getElementById('exportCsv').onclick=exportQuoteCsv;
@@ -327,6 +410,7 @@ document.getElementById('acceptLegal').onclick=()=>{
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
 load();
+updatePdfStatus();
 </script>
 </body>
 </html>

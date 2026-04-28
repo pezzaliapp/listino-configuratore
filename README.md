@@ -1,21 +1,15 @@
 # Configuratore Listino PRO
 
-PWA per caricare un listino Excel/CSV direttamente dalla app.
+PWA per caricare un listino Excel/CSV e creare preventivi rapidi.
 
-## Importante
-Il listino non è incluso nella repo e non viene pubblicato su GitHub.
-I dati vengono salvati solo nel browser dell'utente.
+## Versione aggiornata
 
-## Funzioni
-- Import Excel/CSV locale
-- Prezzi da colonna `Prezzo_EUR` oppure `Prezzo`
-- Pagine da colonna `Pagine` oppure `Pagina`
-- Famiglia e Categoria
-- Ricerca
-- Filtro famiglia / categoria / pagina PDF
-- Pagina multipla gestita correttamente: es. `36, 56`
-- Preventivo rapido
-- Sconto / ricarico
-- Copia testo preventivo
-- Export CSV
-- Finestra tutela all'avvio
+- Caricamento Excel/CSV locale nel browser.
+- Caricamento PDF listino locale nel browser tramite IndexedDB.
+- I numeri nella colonna **Pag.** diventano cliccabili.
+- Cliccando su una pagina viene aperto il PDF in una nuova finestra con `#page=NUMERO`.
+- Nessun file viene pubblicato su GitHub o inviato a server esterni.
+
+## Nota
+
+Su Chrome/Edge desktop il posizionamento sulla pagina PDF funziona normalmente. Su Safari/iPhone il visualizzatore PDF interno può ignorare il parametro `#page`.
