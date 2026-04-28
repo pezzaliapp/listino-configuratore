@@ -86,14 +86,24 @@ const money=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).
 const norm=s=>(s??'').toString().trim();
 const key=s=>norm(s).toLowerCase().replace(/[\s_\-.]/g,'');
 const pageNum=v=>{const m=norm(v).match(/\d+/);return m?Number(m[0]):9999};
+const pageTokens=v=>norm(v).match(/\d+/g)||[];
+const pageMatch=(cell,selected)=>!selected||pageTokens(cell).includes(String(selected));
+function fixCategory(r){
+  const d=key(r.descrizione), code=key(r.codice);
+  if(code==='20100402'||d.includes('gruppo esterno per gonfiaggio ruote tubeless')){
+    r.famiglia='Smontagomme';
+    r.categoria='Accessori smontagomme auto | Gonfiaggio tubeless';
+  }
+  return r;
+}
 function pick(o,names){const m={};Object.keys(o).forEach(k=>m[key(k)]=o[k]);for(const n of names){const v=m[key(n)];if(v!==undefined&&v!==null&&v!=='')return v}return ''}
-function normalize(raw,i){return {id:i+1,codice:norm(pick(raw,['Codice','Code','Cod.','CODICE ARTICOLO'])),descrizione:norm(pick(raw,['Descrizione','Description','Descrizione codice','Articolo'])),prezzo:Number(String(pick(raw,['Prezzo_EUR','Prezzo','Prezzo EUR','Price','Listino'])).replace(/\./g,'').replace(',','.'))||0,pagina:norm(pick(raw,['Pagine','Pagina','Pag','PDF','Page'])),famiglia:norm(pick(raw,['Famiglia','Family','Gruppo'])),categoria:norm(pick(raw,['Categoria','Category','Sottocategoria']))}}
+function normalize(raw,i){return fixCategory({id:i+1,codice:norm(pick(raw,['Codice','Code','Cod.','CODICE ARTICOLO'])),descrizione:norm(pick(raw,['Descrizione','Description','Descrizione codice','Articolo'])),prezzo:Number(String(pick(raw,['Prezzo_EUR','Prezzo','Prezzo EUR','Price','Listino'])).replace(/\./g,'').replace(',','.'))||0,pagina:norm(pick(raw,['Pagine','Pagina','Pag','PDF','Page'])),famiglia:norm(pick(raw,['Famiglia','Family','Gruppo'])),categoria:norm(pick(raw,['Categoria','Category','Sottocategoria']))})}
 function save(){localStorage.setItem('listino_configuratore_rows',JSON.stringify(rows));localStorage.setItem('listino_configuratore_quote',JSON.stringify(quote))}
 function load(){rows=JSON.parse(localStorage.getItem('listino_configuratore_rows')||'[]');quote=JSON.parse(localStorage.getItem('listino_configuratore_quote')||'[]');if(rows.length){els.status.textContent=`Listino locale caricato: ${rows.length} articoli`;els.privacyNotice.classList.remove('hide')}buildFilters();applyFilters();renderQuote()}
 function buildFilters(){fillSelect(els.fam,[...new Set(rows.map(r=>r.famiglia).filter(Boolean))].sort());fillSelect(els.cat,[...new Set(rows.map(r=>r.categoria).filter(Boolean))].sort());fillSelect(els.pag,[...new Set(rows.map(r=>r.pagina).filter(Boolean))].sort((a,b)=>pageNum(a)-pageNum(b)));renderChips()}
 function fillSelect(sel,vals){const first=sel.options[0].textContent;sel.innerHTML=`<option value="">${first}</option>`+vals.map(v=>`<option>${escapeHtml(v)}</option>`).join('')}
 function renderChips(){const top=[...new Set(rows.map(r=>r.famiglia).filter(Boolean))].slice(0,8);els.chips.innerHTML=top.map(v=>`<button class="chip" data-fam="${escapeAttr(v)}">${escapeHtml(v)}</button>`).join('');els.chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{els.fam.value=b.dataset.fam;applyFilters()})}
-function applyFilters(){const q=key(els.q.value),f=els.fam.value,c=els.cat.value,p=els.pag.value;filtered=rows.filter(r=>(!q||key(r.codice+' '+r.descrizione+' '+r.famiglia+' '+r.categoria).includes(q))&&(!f||r.famiglia===f)&&(!c||r.categoria===c)&&(!p||r.pagina===p));renderTable();updateKpi()}
+function applyFilters(){const q=key(els.q.value),f=els.fam.value,c=els.cat.value,p=els.pag.value;filtered=rows.filter(r=>(!q||key(r.codice+' '+r.descrizione+' '+r.famiglia+' '+r.categoria).includes(q))&&(!f||r.famiglia===f)&&(!c||r.categoria===c)&&pageMatch(r.pagina,p));renderTable();updateKpi()}
 function renderTable(){if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';return}if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';return}els.tbody.innerHTML=filtered.map(r=>`<tr><td class="code">${escapeHtml(r.codice)}</td><td><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td><td class="price">${money(r.prezzo)}</td><td>${escapeHtml(r.pagina)}</td><td><span class="small">${escapeHtml(r.categoria)}</span></td><td><button class="addBtn" data-id="${r.id}">+</button></td></tr>`).join('');els.tbody.querySelectorAll('button').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)))}
 function updateKpi(){els.kArt.textContent=filtered.length||rows.length;els.kFam.textContent=new Set(rows.map(r=>r.famiglia).filter(Boolean)).size;els.kQuote.textContent=quote.reduce((s,x)=>s+x.qta,0)}
 function addQuote(id){const r=rows.find(x=>x.id===id);if(!r)return;const ex=quote.find(x=>x.id===id);ex?ex.qta++:quote.push({...r,qta:1});save();renderQuote()}
