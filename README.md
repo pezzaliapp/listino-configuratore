@@ -1,19 +1,9 @@
-# Configuratore Listino PRO Mobile
+# Configuratore Listino PRO
 
-Versione ottimizzata per laptop, iPhone e Android.
+Versione aggiornata:
 
-## Funzioni
-
-- Caricamento locale Excel / CSV.
-- Caricamento locale PDF listino.
-- Salvataggio dei dati solo nel browser del dispositivo.
-- Colonna Pag. visibile anche su smartphone.
-- Viewer PDF interno alla app, senza popup Safari.
-- Apertura diretta alla pagina PDF indicata dalla riga articolo.
-- Preventivo rapido con copia testo, export CSV e invio WhatsApp.
-
-## Nota tecnica
-
-Il PDF non viene caricato su GitHub e non viene inviato a server esterni. Viene salvato in IndexedDB nel browser dell'utente.
-
-Per usare il viewer PDF interno serve aprire la app almeno una volta con connessione internet attiva, perché utilizza PDF.js da CDN. Dopo il primo caricamento, il Service Worker prova a mantenere gli asset in cache.
+- Laptop/Desktop: mantiene caricamento PDF locale e link pagina PDF.
+- Smartphone: PDF nascosto/disattivato per evitare problemi iPhone/Android.
+- Aggiunta quantità prima dell’inserimento articoli.
+- Preventivo rapido con più articoli, quantità modificabili, copia testo, WhatsApp ed export CSV.
+- File Excel/CSV e PDF restano nel browser/dispositivo: non vengono inviati a server.

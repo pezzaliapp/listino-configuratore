@@ -89,6 +89,26 @@ tr:hover td{background:#fafafa}
 @media(max-width:980px){td:nth-child(4),th:nth-child(4){display:table-cell} td:nth-child(5),th:nth-child(5){display:none}}
 @media(max-width:700px){.tableWrap{overflow:visible} table,thead,tbody,tr,td{display:block;width:100%} thead{display:none} tbody{padding:10px;display:grid;gap:10px;background:#f8fafc} tr{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 8px 18px rgba(15,23,42,.06)} tr:hover td{background:transparent} td{border-bottom:0;padding:6px 0} td[data-label]{display:flex;gap:12px;justify-content:space-between;align-items:flex-start} td[data-label]::before{content:attr(data-label);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:900;min-width:74px}.price{text-align:left}.addBtn{width:100%;margin-top:8px}.pageBtn{min-width:88px}.pdfTop{flex-wrap:wrap}.pdfTop b{max-width:100%;width:100%}.pdfTop .btns{width:100%;justify-content:space-between}.pdfTop input{width:58px}}
 
+
+.mobileCards{display:none}
+.mobileCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin:10px;box-shadow:0 8px 22px rgba(15,23,42,.07)}
+.mobileCardTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.mobileCode{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:950;font-size:15px}
+.mobileDesc{font-weight:850;line-height:1.25;margin:6px 0}
+.mobileMeta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.mobileMeta div{background:#f9fafb;border:1px solid var(--line);border-radius:12px;padding:9px}
+.mobileMeta span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:900}
+.mobileMeta b{display:block;margin-top:3px;word-break:break-word}
+.mobileActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.mobilePageBtn{background:#1d4ed8!important;color:#fff!important;border:1px solid #1d4ed8!important;border-radius:14px!important;padding:12px 10px!important;font-size:15px!important;font-weight:950!important;min-height:46px!important;width:100%!important}
+.mobileAddBtn{width:100%;min-height:46px}
+@media(max-width:700px){.tableWrap{display:none!important}.mobileCards{display:block!important;padding:4px 0 10px}.mobileCardTop .mobilePageBtn{min-width:112px}}
+
+.qtyAddWrap{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.qtyAddWrap input{width:62px;border:1px solid var(--line);border-radius:11px;padding:8px;text-align:center}
+.mobileQtyRow{display:grid;grid-template-columns:80px 1fr;gap:8px;margin-top:10px}
+.mobileQtyRow input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
+@media(max-width:700px){.pdfTools{display:none!important}.pageBtn,.mobilePageBtn{display:none!important}td[data-label="Pagina"],td:nth-child(4),th:nth-child(4){display:none!important}.mobileMeta{grid-template-columns:1fr}.mobileActions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -109,7 +129,7 @@ tr:hover td{background:#fafafa}
   <section class="hero">
     <div>
       <h1>Configuratore Listino</h1>
-      <p>Carica un file Excel o CSV. I dati restano salvati solo sul tuo dispositivo e non vengono inviati a server.</p>
+      <p>Carica un file Excel o CSV. I dati restano salvati solo sul tuo dispositivo. Su smartphone il PDF è disattivato per evitare problemi di compatibilità iOS/Android.</p>
     </div>
     <div class="importBox">
       <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
@@ -145,6 +165,7 @@ tr:hover td{background:#fafafa}
           <tbody id="tbody"><tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr></tbody>
         </table>
       </div>
+      <div id="mobileCards" class="mobileCards"><div class="empty">Carica un file Excel o CSV per iniziare.</div></div>
     </section>
 
     <aside class="side">
@@ -200,7 +221,7 @@ const els={
   chips:document.getElementById('chips'),kArt:document.getElementById('kArt'),kFam:document.getElementById('kFam'),kQuote:document.getElementById('kQuote'),
   quoteList:document.getElementById('quoteList'),discount:document.getElementById('discount'),markup:document.getElementById('markup'),
   gross:document.getElementById('gross'),discVal:document.getElementById('discVal'),markVal:document.getElementById('markVal'),net:document.getElementById('net'),
-  privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck'),pdfFile:document.getElementById('pdfFile'),pdfStatus:document.getElementById('pdfStatus'),pdfViewer:document.getElementById('pdfViewer'),pdfTitle:document.getElementById('pdfTitle'),pdfCanvas:document.getElementById('pdfCanvas'),pdfCanvasWrap:document.getElementById('pdfCanvasWrap'),pdfPageInput:document.getElementById('pdfPageInput'),pdfPageTotal:document.getElementById('pdfPageTotal')
+  privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck'),pdfFile:document.getElementById('pdfFile'),pdfStatus:document.getElementById('pdfStatus'),pdfViewer:document.getElementById('pdfViewer'),pdfTitle:document.getElementById('pdfTitle'),pdfCanvas:document.getElementById('pdfCanvas'),pdfCanvasWrap:document.getElementById('pdfCanvasWrap'),pdfPageInput:document.getElementById('pdfPageInput'),pdfPageTotal:document.getElementById('pdfPageTotal'),mobileCards:document.getElementById('mobileCards')
 };
 let rows=[],filtered=[],quote=[];
 let pdfDoc=null,currentPdfPage=1,pdfName='Listino PDF';
@@ -286,28 +307,59 @@ function applyFilters(){
   );
   renderTable(); updateKpi();
 }
+function bindArticleButtons(scope){
+  scope.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{
+    const id=Number(b.dataset.id);
+    const qtyInput=scope.querySelector(`[data-addqty="${id}"]`);
+    addQuote(id, qtyInput ? Number(qtyInput.value)||1 : 1);
+  });
+  scope.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(Number(b.dataset.page)));
+}
+function renderMobileCards(){
+  if(!els.mobileCards) return;
+  if(!rows.length){els.mobileCards.innerHTML='<div class="empty">Carica un file Excel o CSV per iniziare.</div>';return;}
+  if(!filtered.length){els.mobileCards.innerHTML='<div class="empty">Nessun articolo trovato.</div>';return;}
+  els.mobileCards.innerHTML=filtered.map(r=>{
+    return `<article class="mobileCard">
+      <div class="mobileCardTop">
+        <div><div class="mobileCode">${escapeHtml(r.codice)}</div><div class="small">${escapeHtml(r.famiglia||'')}</div></div>
+      </div>
+      <div class="mobileDesc">${escapeHtml(r.descrizione)}</div>
+      <div class="mobileMeta">
+        <div><span>Prezzo</span><b>${money(r.prezzo)}</b></div>
+        <div><span>Categoria</span><b>${escapeHtml(r.categoria||'-')}</b></div>
+      </div>
+      <div class="mobileQtyRow">
+        <input type="number" min="1" value="1" data-addqty="${r.id}" aria-label="Quantità">
+        <button type="button" class="addBtn mobileAddBtn" data-id="${r.id}">Aggiungi al preventivo</button>
+      </div>
+    </article>`;
+  }).join('');
+  bindArticleButtons(els.mobileCards);
+}
 function renderTable(){
-  if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';return;}
-  if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';return;}
+  if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';renderMobileCards();return;}
+  if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';renderMobileCards();return;}
   els.tbody.innerHTML=filtered.map(r=>`<tr>
     <td data-label="Codice" class="code">${escapeHtml(r.codice)}</td>
     <td data-label="Descrizione"><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td>
     <td data-label="Prezzo" class="price">${money(r.prezzo)}</td>
-    <td data-label="Pagina">${pageTokens(r.pagina).length?pageTokens(r.pagina).map(p=>`<button class="pageBtn" data-page="${p}">Pag. ${p}</button>`).join(' '):escapeHtml(r.pagina)}</td>
+    <td data-label="Pagina">${pageTokens(r.pagina).length?pageTokens(r.pagina).map(p=>`<button type="button" class="pageBtn" data-page="${p}">Pag. ${p}</button>`).join(' '):escapeHtml(r.pagina)}</td>
     <td data-label="Categoria"><span class="small">${escapeHtml(r.categoria)}</span></td>
-    <td><button class="addBtn" data-id="${r.id}">Aggiungi</button></td>
+    <td><div class="qtyAddWrap"><input type="number" min="1" value="1" data-addqty="${r.id}" aria-label="Quantità"><button class="addBtn" data-id="${r.id}">Aggiungi</button></div></td>
   </tr>`).join('');
-  els.tbody.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)));
-  els.tbody.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(Number(b.dataset.page)));
+  bindArticleButtons(els.tbody);
+  renderMobileCards();
 }
 function updateKpi(){
   els.kArt.textContent=filtered.length || rows.length;
   els.kFam.textContent=new Set(rows.map(r=>r.famiglia).filter(Boolean)).size;
   els.kQuote.textContent=quote.reduce((s,x)=>s+x.qta,0);
 }
-function addQuote(id){
+function addQuote(id, qty=1){
   const r=rows.find(x=>x.id===id); if(!r)return;
-  const ex=quote.find(x=>x.id===id); ex?ex.qta++:quote.push({...r,qta:1});
+  qty=Math.max(1,Number(qty)||1);
+  const ex=quote.find(x=>x.id===id); ex?ex.qta+=qty:quote.push({...r,qta:qty});
   save(); renderQuote();
 }
 function renderQuote(){
@@ -371,6 +423,7 @@ async function renderPdfPage(n){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   await page.render({canvasContext:ctx,viewport}).promise;
   els.pdfPageInput.value=currentPdfPage;
+  els.pdfCanvasWrap.scrollTop=0;
 }
 async function openPdfAtPage(n){
   els.pdfViewer.classList.remove('hide');
@@ -382,7 +435,7 @@ els.pdfFile.onchange=async e=>{
   const data=await file.arrayBuffer();
   await idbSet('listino_pdf',{name:file.name,type:file.type||'application/pdf',data});
   pdfDoc=null; pdfName=file.name;
-  els.pdfStatus.textContent=`PDF caricato: ${file.name}. Ora le pagine sono cliccabili anche da mobile.`;
+  els.pdfStatus.textContent=`PDF caricato: ${file.name}. Le pagine sono cliccabili su laptop/desktop.`;
 };
 document.getElementById('pdfClose').onclick=()=>{els.pdfViewer.classList.add('hide');els.pdfViewer.setAttribute('aria-hidden','true');};
 document.getElementById('pdfPrev').onclick=()=>renderPdfPage(currentPdfPage-1);
