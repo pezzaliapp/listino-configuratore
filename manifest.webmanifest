@@ -1,9 +1,17 @@
 {
-  "name": "Configuratore Listino",
-  "short_name": "Listino",
+  "name": "Configuratore Listino PRO",
+  "short_name": "Listino PRO",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
-  "icons": []
+  "background_color": "#f4f6fb",
+  "theme_color": "#111827",
+  "description": "PWA configuratore listino con caricamento locale Excel/CSV.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
