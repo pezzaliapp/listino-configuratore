@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listino Configuratore</title>
+  <link rel="manifest" href="manifest.webmanifest">
+</head>
+
+<body>
+<h2>📦 Configuratore Listino</h2>
+
+<input type="file" id="fileInput" accept=".xlsx,.csv" />
+<button onclick="clearData()">🗑 Cancella Listino</button>
+
+<input type="text" id="search" placeholder="Cerca codice o descrizione">
+
+<table border="1" id="table">
+  <thead>
+    <tr>
+      <th>Codice</th>
+      <th>Descrizione</th>
+      <th>Prezzo</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+<script>
+let data = [];
+
+const input = document.getElementById("fileInput");
+
+input.addEventListener("change", handleFile);
+
+function handleFile(e) {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(evt) {
+    const workbook = XLSX.read(evt.target.result, {type:'binary'});
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    data = XLSX.utils.sheet_to_json(sheet);
+
+    localStorage.setItem("listino", JSON.stringify(data));
+    renderTable(data);
+  };
+
+  reader.readAsBinaryString(file);
+}
+
+function renderTable(dataset) {
+  const tbody = document.querySelector("#table tbody");
+  tbody.innerHTML = "";
+
+  dataset.forEach(row => {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${row.Codice || ""}</td>
+      <td>${row.Descrizione || ""}</td>
+      <td>${row.Prezzo || ""}</td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("search").addEventListener("input", function() {
+  const value = this.value.toLowerCase();
+
+  const filtered = data.filter(r =>
+    (r.Codice || "").toString().toLowerCase().includes(value) ||
+    (r.Descrizione || "").toLowerCase().includes(value)
+  );
+
+  renderTable(filtered);
+});
+
+function clearData() {
+  localStorage.removeItem("listino");
+  location.reload();
+}
+
+// LOAD AUTOMATICO
+window.onload = () => {
+  const saved = localStorage.getItem("listino");
+  if (saved) {
+    data = JSON.parse(saved);
+    renderTable(data);
+  }
+}
+
+// SERVICE WORKER
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
