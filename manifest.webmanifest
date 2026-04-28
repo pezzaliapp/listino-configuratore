@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#f4f6fb",
   "theme_color": "#111827",
-  "description": "PWA configuratore listino con caricamento locale Excel/CSV, PDF locale e invio WhatsApp.",
+  "description": "PWA configuratore listino con caricamento locale Excel/CSV e PDF, ottimizzata per mobile.",
   "icons": [
     {
       "src": "icon.svg",

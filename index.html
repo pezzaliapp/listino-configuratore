@@ -18,14 +18,12 @@ button{border:0;border-radius:14px;background:var(--brand);color:white;padding:1
 button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
 button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
-.pageBtn{background:#fff;color:#111827;border:1px solid var(--line);padding:7px 10px;border-radius:10px;font-weight:850;white-space:nowrap}
-.pdfStatusOk{color:#bbf7d0}.mobileHint{display:none}
 .app{max-width:1440px;margin:0 auto;padding:18px}
 .hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:28px;padding:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:end}
 .hero h1{margin:0;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em}
 .hero p{margin:10px 0 0;color:#e5e7eb;max-width:860px;line-height:1.45;font-size:16px}
 .importBox{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px}
-.fileLabel{display:block;background:white;color:#111827;border-radius:16px;padding:15px;text-align:center;font-weight:850;cursor:pointer;margin-bottom:10px}
+.fileLabel{display:block;background:white;color:#111827;border-radius:16px;padding:15px;text-align:center;font-weight:850;cursor:pointer}
 .fileLabel input{display:none}
 .status{margin-top:10px;color:#e5e7eb;font-size:14px}
 .notice{padding:14px 18px;background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;font-size:14px;margin-top:0}
@@ -70,22 +68,27 @@ tr:hover td{background:#fafafa}
 @media(max-width:980px){
   .hero,.grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.tableWrap{max-height:none}
   .side{order:-1}.app{padding:10px}.hero{border-radius:22px;padding:18px}
-  .actions{grid-template-columns:1fr}
-  .mobileHint{display:block;color:#6b7280;font-size:12px;margin-top:6px}
-  table,thead,tbody,tr,td{display:block;width:100%}
-  thead{display:none}
-  tr{border-bottom:1px solid var(--line);padding:12px 10px;background:#fff}
-  td{border-bottom:0;padding:4px 0}
-  td::before{content:attr(data-label);display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:800;margin-bottom:2px}
-  td:last-child::before{display:none}
-  .price{text-align:left}
-  .addBtn{width:100%;margin-top:8px}
-  .pageBtn{width:auto;min-width:72px}
+  td:nth-child(4),th:nth-child(4),td:nth-child(5),th:nth-child(5){display:none}.actions{grid-template-columns:1fr}
 }
 @media(max-width:560px){
   .toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.hero h1{font-size:30px}
   table{font-size:14px}.price{font-size:13px}.panelHead{align-items:flex-start;flex-direction:column}.quoteRow{grid-template-columns:1fr 58px 28px}
 }
+
+.pdfTools{margin-top:12px;display:grid;gap:8px}
+.pdfStatus{color:#e5e7eb;font-size:13px;line-height:1.35}
+.pageBtn{background:#eef2ff;color:#1f2937;border:1px solid #c7d2fe;padding:8px 10px;border-radius:999px;font-weight:900;white-space:nowrap}
+.whatsappBtn{background:#16a34a;color:white}
+.pdfViewer{position:fixed;inset:0;background:#111827;z-index:10000;display:flex;flex-direction:column}
+.pdfViewer.hide{display:none!important}
+.pdfTop{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));background:#020617;color:#fff;border-bottom:1px solid rgba(255,255,255,.12)}
+.pdfTop b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:38vw}.pdfTop .btns{display:flex;gap:8px;align-items:center}
+.pdfTop button{padding:9px 11px;border-radius:12px;background:#fff;color:#111827}.pdfTop button.dark{background:#374151;color:#fff}.pdfTop input{width:68px;border:1px solid #374151;border-radius:10px;padding:8px;text-align:center;background:#fff;color:#111827}
+.pdfCanvasWrap{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;justify-content:center;align-items:flex-start;padding:12px;background:#374151}
+#pdfCanvas{background:#fff;box-shadow:0 10px 35px rgba(0,0,0,.35);max-width:100%;height:auto}.pdfHint{color:#cbd5e1;font-size:12px;text-align:center;padding:7px;background:#111827}
+@media(max-width:980px){td:nth-child(4),th:nth-child(4){display:table-cell} td:nth-child(5),th:nth-child(5){display:none}}
+@media(max-width:700px){.tableWrap{overflow:visible} table,thead,tbody,tr,td{display:block;width:100%} thead{display:none} tbody{padding:10px;display:grid;gap:10px;background:#f8fafc} tr{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 8px 18px rgba(15,23,42,.06)} tr:hover td{background:transparent} td{border-bottom:0;padding:6px 0} td[data-label]{display:flex;gap:12px;justify-content:space-between;align-items:flex-start} td[data-label]::before{content:attr(data-label);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:900;min-width:74px}.price{text-align:left}.addBtn{width:100%;margin-top:8px}.pageBtn{min-width:88px}.pdfTop{flex-wrap:wrap}.pdfTop b{max-width:100%;width:100%}.pdfTop .btns{width:100%;justify-content:space-between}.pdfTop input{width:58px}}
+
 </style>
 </head>
 <body>
@@ -110,13 +113,15 @@ tr:hover td{background:#fafafa}
     </div>
     <div class="importBox">
       <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
-      <label class="fileLabel">Carica PDF listino<input id="pdfFile" type="file" accept="application/pdf,.pdf"></label>
       <div id="status" class="status">Nessun listino caricato.</div>
-      <div id="pdfStatus" class="status">Nessun PDF caricato.</div>
+      <div class="pdfTools">
+        <label class="fileLabel">Carica PDF listino<input id="pdfFile" type="file" accept="application/pdf,.pdf"></label>
+        <div id="pdfStatus" class="pdfStatus">Nessun PDF caricato. Il PDF resta salvato solo su questo dispositivo.</div>
+      </div>
     </div>
   </section>
 
-  <div id="privacyNotice" class="notice hide">Listino e PDF restano salvati localmente su questo dispositivo. Puoi cancellarli con il pulsante “Cancella dati locali”.</div>
+  <div id="privacyNotice" class="notice hide">Listino salvato localmente su questo dispositivo. Puoi cancellarlo con il pulsante “Cancella dati locali”.</div>
 
   <main class="grid">
     <section class="panel">
@@ -165,30 +170,46 @@ tr:hover td{background:#fafafa}
           <div class="totalLine"><span>Ricarico</span><b id="markVal">€ 0,00</b></div>
           <div class="totalLine grand"><span>Totale</span><span id="net">€ 0,00</span></div>
         </div>
-        <div class="actions"><button id="copyQuote">Copia testo</button><button class="secondary" id="sendWhatsapp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
+        <div class="actions"><button id="copyQuote">Copia testo</button><button class="whatsappBtn" id="sendWhatsApp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
       </section>
     </aside>
   </main>
 </div>
 
+
+<div id="pdfViewer" class="pdfViewer hide" aria-hidden="true">
+  <div class="pdfTop">
+    <b id="pdfTitle">Listino PDF</b>
+    <div class="btns">
+      <button id="pdfPrev" class="dark">‹</button>
+      <span>Pag.</span><input id="pdfPageInput" type="number" min="1" value="1"><span id="pdfPageTotal">/ —</span>
+      <button id="pdfNext" class="dark">›</button>
+      <button id="pdfClose">Chiudi</button>
+    </div>
+  </div>
+  <div class="pdfHint">Viewer interno: su iPhone/Android evita i popup bloccati e apre la pagina richiesta dentro la app.</div>
+  <div id="pdfCanvasWrap" class="pdfCanvasWrap"><canvas id="pdfCanvas"></canvas></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <script>
 const els={
-  file:document.getElementById('file'),pdfFile:document.getElementById('pdfFile'),status:document.getElementById('status'),pdfStatus:document.getElementById('pdfStatus'),tbody:document.getElementById('tbody'),
+  file:document.getElementById('file'),status:document.getElementById('status'),tbody:document.getElementById('tbody'),
   q:document.getElementById('q'),fam:document.getElementById('fam'),cat:document.getElementById('cat'),pag:document.getElementById('pag'),
   chips:document.getElementById('chips'),kArt:document.getElementById('kArt'),kFam:document.getElementById('kFam'),kQuote:document.getElementById('kQuote'),
   quoteList:document.getElementById('quoteList'),discount:document.getElementById('discount'),markup:document.getElementById('markup'),
   gross:document.getElementById('gross'),discVal:document.getElementById('discVal'),markVal:document.getElementById('markVal'),net:document.getElementById('net'),
-  privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck')
+  privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck'),pdfFile:document.getElementById('pdfFile'),pdfStatus:document.getElementById('pdfStatus'),pdfViewer:document.getElementById('pdfViewer'),pdfTitle:document.getElementById('pdfTitle'),pdfCanvas:document.getElementById('pdfCanvas'),pdfCanvasWrap:document.getElementById('pdfCanvasWrap'),pdfPageInput:document.getElementById('pdfPageInput'),pdfPageTotal:document.getElementById('pdfPageTotal')
 };
 let rows=[],filtered=[],quote=[];
-const DB_NAME="listino_configuratore_pro_db", DB_STORE="files";
-function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
-async function dbSet(key,val){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).put(val,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
-async function dbGet(key){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readonly");const req=tx.objectStore(DB_STORE).get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
-async function dbClear(){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+let pdfDoc=null,currentPdfPage=1,pdfName='Listino PDF';
 const money=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n||0));
 const norm=s=>(s??'').toString().trim();
+function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open('listino_pro_db',1);req.onupgradeneeded=()=>req.result.createObjectStore('files');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function idbSet(k,v){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
+async function idbGet(k){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction('files','readonly');const req=tx.objectStore('files').get(k);req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);});}
+async function idbDel(k){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
 const key=s=>norm(s).toLowerCase().replace(/[àá]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u').replace(/[\s_\-.]/g,'');
 const pageNum=v=>{const m=norm(v).match(/\d+/);return m?Number(m[0]):9999};
 const pageTokens=v=>norm(v).match(/\d+/g)||[];
@@ -230,15 +251,13 @@ function save(){
   localStorage.setItem('listino_configuratore_rows_PRO',JSON.stringify(rows));
   localStorage.setItem('listino_configuratore_quote_PRO',JSON.stringify(quote));
 }
-async function load(){
+function load(){
   rows=JSON.parse(localStorage.getItem('listino_configuratore_rows_PRO')||'[]');
   quote=JSON.parse(localStorage.getItem('listino_configuratore_quote_PRO')||'[]');
   if(rows.length){
     els.status.textContent=`Listino locale caricato: ${rows.length} articoli`;
     els.privacyNotice.classList.remove('hide');
   }
-  const pdf=await dbGet('listino_pdf').catch(()=>null);
-  if(pdf){els.pdfStatus.innerHTML=`PDF locale caricato: <span class="pdfStatusOk">${escapeHtml(pdf.name||'listino.pdf')}</span>`;els.privacyNotice.classList.remove('hide');}
   buildFilters(); applyFilters(); renderQuote();
 }
 function fillSelect(sel,vals){
@@ -270,14 +289,14 @@ function applyFilters(){
 function renderTable(){
   if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';return;}
   if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';return;}
-  els.tbody.innerHTML=filtered.map(r=>{const pages=pageTokens(r.pagina);const pageHtml=pages.length?pages.map(p=>`<button class="pageBtn" data-page="${p}">Pag. ${p}</button>`).join(' '):escapeHtml(r.pagina);return `<tr>
+  els.tbody.innerHTML=filtered.map(r=>`<tr>
     <td data-label="Codice" class="code">${escapeHtml(r.codice)}</td>
     <td data-label="Descrizione"><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td>
     <td data-label="Prezzo" class="price">${money(r.prezzo)}</td>
-    <td data-label="Pagina PDF">${pageHtml}<div class="mobileHint">Tocca per aprire il PDF alla pagina indicata.</div></td>
+    <td data-label="Pagina">${pageTokens(r.pagina).length?pageTokens(r.pagina).map(p=>`<button class="pageBtn" data-page="${p}">Pag. ${p}</button>`).join(' '):escapeHtml(r.pagina)}</td>
     <td data-label="Categoria"><span class="small">${escapeHtml(r.categoria)}</span></td>
-    <td><button class="addBtn" data-id="${r.id}">+</button></td>
-  </tr>`}).join('');
+    <td><button class="addBtn" data-id="${r.id}">Aggiungi</button></td>
+  </tr>`).join('');
   els.tbody.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)));
   els.tbody.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(Number(b.dataset.page)));
 }
@@ -321,22 +340,59 @@ function download(name,text){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
-async function openPdfAtPage(pageNumber){
-  const saved=await dbGet('listino_pdf').catch(()=>null);
-  if(!saved){alert('Carica prima il PDF del listino.');return;}
-  const blob=new Blob([saved.data],{type:'application/pdf'});
-  const url=URL.createObjectURL(blob);
-  const target=`${url}#page=${pageNumber}`;
-  const w=window.open(target,'_blank');
-  if(!w){alert('Popup bloccato. Consenti l’apertura delle nuove finestre per questa app.');}
-  setTimeout(()=>URL.revokeObjectURL(url),60000);
+async function updatePdfStatus(){
+  try{const saved=await idbGet('listino_pdf'); if(saved){pdfName=saved.name||'Listino PDF'; els.pdfStatus.textContent=`PDF caricato: ${pdfName}. Tocca una pagina del listino per aprirla.`;}}
+  catch(e){console.warn(e)}
 }
-async function savePdfFile(file){
+async function getPdfBytes(){const saved=await idbGet('listino_pdf');return saved?saved.data:null;}
+async function ensurePdf(){
+  if(pdfDoc) return pdfDoc;
+  const data=await getPdfBytes();
+  if(!data){alert('Carica prima il PDF del listino.');return null;}
+  if(!window.pdfjsLib){alert('Viewer PDF non caricato. Apri la app una volta con internet attivo.');return null;}
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  pdfDoc=await pdfjsLib.getDocument({data:new Uint8Array(data)}).promise;
+  els.pdfPageTotal.textContent='/ '+pdfDoc.numPages;
+  els.pdfTitle.textContent=pdfName;
+  return pdfDoc;
+}
+async function renderPdfPage(n){
+  const doc=await ensurePdf(); if(!doc)return;
+  currentPdfPage=Math.min(Math.max(1,Number(n)||1),doc.numPages);
+  const page=await doc.getPage(currentPdfPage);
+  const wrapW=Math.max(320,els.pdfCanvasWrap.clientWidth-24);
+  const base=page.getViewport({scale:1});
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const scale=Math.min(wrapW/base.width,1.6);
+  const viewport=page.getViewport({scale});
+  const canvas=els.pdfCanvas,ctx=canvas.getContext('2d');
+  canvas.width=Math.floor(viewport.width*dpr); canvas.height=Math.floor(viewport.height*dpr);
+  canvas.style.width=Math.floor(viewport.width)+'px'; canvas.style.height=Math.floor(viewport.height)+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  await page.render({canvasContext:ctx,viewport}).promise;
+  els.pdfPageInput.value=currentPdfPage;
+}
+async function openPdfAtPage(n){
+  els.pdfViewer.classList.remove('hide');
+  els.pdfViewer.setAttribute('aria-hidden','false');
+  await renderPdfPage(n);
+}
+els.pdfFile.onchange=async e=>{
+  const file=e.target.files[0]; if(!file)return;
   const data=await file.arrayBuffer();
-  await dbSet('listino_pdf',{name:file.name,type:file.type||'application/pdf',data});
-  els.pdfStatus.innerHTML=`PDF locale caricato: <span class="pdfStatusOk">${escapeHtml(file.name)}</span>`;
-  els.privacyNotice.classList.remove('hide');
-  alert('PDF listino caricato. Ora puoi toccare il numero pagina negli articoli.');
+  await idbSet('listino_pdf',{name:file.name,type:file.type||'application/pdf',data});
+  pdfDoc=null; pdfName=file.name;
+  els.pdfStatus.textContent=`PDF caricato: ${file.name}. Ora le pagine sono cliccabili anche da mobile.`;
+};
+document.getElementById('pdfClose').onclick=()=>{els.pdfViewer.classList.add('hide');els.pdfViewer.setAttribute('aria-hidden','true');};
+document.getElementById('pdfPrev').onclick=()=>renderPdfPage(currentPdfPage-1);
+document.getElementById('pdfNext').onclick=()=>renderPdfPage(currentPdfPage+1);
+els.pdfPageInput.onchange=()=>renderPdfPage(els.pdfPageInput.value);
+window.addEventListener('resize',()=>{if(!els.pdfViewer.classList.contains('hide')&&pdfDoc)renderPdfPage(currentPdfPage);});
+function sendWhatsApp(){
+  const text=quoteText();
+  if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;}
+  window.location.href='https://wa.me/?text='+encodeURIComponent(text);
 }
 
 els.file.onchange=async e=>{
@@ -353,15 +409,14 @@ els.file.onchange=async e=>{
   els.privacyNotice.classList.remove('hide');
   buildFilters(); applyFilters(); renderQuote();
 };
-els.pdfFile.onchange=async e=>{const file=e.target.files[0]; if(file) await savePdfFile(file);};
 ['q','fam','cat','pag'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
 ['discount','markup'].forEach(id=>document.getElementById(id).addEventListener('input',calcTotals));
 document.getElementById('sortPdf').onclick=()=>{rows.sort((a,b)=>pageNum(a.pagina)-pageNum(b.pagina)||a.codice.localeCompare(b.codice));save();applyFilters();};
-document.getElementById('clearLocal').onclick=async()=>{if(confirm('Cancellare listino, PDF e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows_PRO');localStorage.removeItem('listino_configuratore_quote_PRO');await dbClear().catch(()=>{});location.reload();}};
+document.getElementById('clearLocal').onclick=async()=>{if(confirm('Cancellare listino, PDF e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows_PRO');localStorage.removeItem('listino_configuratore_quote_PRO');await idbDel('listino_pdf');location.reload();}};
 document.getElementById('emptyQuote').onclick=()=>{quote=[];save();renderQuote();};
 document.getElementById('copyQuote').onclick=async()=>{await navigator.clipboard.writeText(quoteText());alert('Testo preventivo copiato');};
-document.getElementById('sendWhatsapp').onclick=()=>{if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;} const text=encodeURIComponent(quoteText()); window.open(`https://wa.me/?text=${text}`,'_blank');};
 document.getElementById('exportCsv').onclick=exportQuoteCsv;
+document.getElementById('sendWhatsApp').onclick=sendWhatsApp;
 document.getElementById('acceptLegal').onclick=()=>{
   if(!els.legalCheck.checked){alert('Devi confermare la presa visione per continuare.');return;}
   localStorage.setItem('listino_configuratore_legal_ok','true');
@@ -369,6 +424,7 @@ document.getElementById('acceptLegal').onclick=()=>{
 };
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
+updatePdfStatus();
 load();
 </script>
 </body>
