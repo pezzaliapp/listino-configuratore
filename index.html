@@ -18,15 +18,14 @@ button{border:0;border-radius:14px;background:var(--brand);color:white;padding:1
 button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
 button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}
 button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
-button.pageBtn{background:#fff;color:#111827;border:1px solid var(--line);padding:7px 10px;border-radius:10px;font-weight:850;min-width:42px}
-button.pageBtn:hover{border-color:#111827;background:#f9fafb}
-.importGrid{display:grid;gap:12px}
+.pageBtn{background:#fff;color:#111827;border:1px solid var(--line);padding:7px 10px;border-radius:10px;font-weight:850;white-space:nowrap}
+.pdfStatusOk{color:#bbf7d0}.mobileHint{display:none}
 .app{max-width:1440px;margin:0 auto;padding:18px}
 .hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:28px;padding:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:end}
 .hero h1{margin:0;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em}
 .hero p{margin:10px 0 0;color:#e5e7eb;max-width:860px;line-height:1.45;font-size:16px}
 .importBox{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px}
-.fileLabel{display:block;background:white;color:#111827;border-radius:16px;padding:15px;text-align:center;font-weight:850;cursor:pointer}
+.fileLabel{display:block;background:white;color:#111827;border-radius:16px;padding:15px;text-align:center;font-weight:850;cursor:pointer;margin-bottom:10px}
 .fileLabel input{display:none}
 .status{margin-top:10px;color:#e5e7eb;font-size:14px}
 .notice{padding:14px 18px;background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;font-size:14px;margin-top:0}
@@ -71,7 +70,17 @@ tr:hover td{background:#fafafa}
 @media(max-width:980px){
   .hero,.grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.tableWrap{max-height:none}
   .side{order:-1}.app{padding:10px}.hero{border-radius:22px;padding:18px}
-  td:nth-child(4),th:nth-child(4),td:nth-child(5),th:nth-child(5){display:none}.actions{grid-template-columns:1fr}
+  .actions{grid-template-columns:1fr}
+  .mobileHint{display:block;color:#6b7280;font-size:12px;margin-top:6px}
+  table,thead,tbody,tr,td{display:block;width:100%}
+  thead{display:none}
+  tr{border-bottom:1px solid var(--line);padding:12px 10px;background:#fff}
+  td{border-bottom:0;padding:4px 0}
+  td::before{content:attr(data-label);display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:800;margin-bottom:2px}
+  td:last-child::before{display:none}
+  .price{text-align:left}
+  .addBtn{width:100%;margin-top:8px}
+  .pageBtn{width:auto;min-width:72px}
 }
 @media(max-width:560px){
   .toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.hero h1{font-size:30px}
@@ -97,21 +106,17 @@ tr:hover td{background:#fafafa}
   <section class="hero">
     <div>
       <h1>Configuratore Listino</h1>
-      <p>Carica Excel/CSV e PDF dalla app. I file restano salvati solo nel browser di questo dispositivo: non vengono pubblicati su GitHub e non vengono inviati a server esterni.</p>
+      <p>Carica un file Excel o CSV. I dati restano salvati solo sul tuo dispositivo e non vengono inviati a server.</p>
     </div>
-    <div class="importBox importGrid">
-      <div>
-        <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
-        <div id="status" class="status">Nessun listino caricato.</div>
-      </div>
-      <div>
-        <label class="fileLabel">Carica listino PDF<input id="pdfFile" type="file" accept="application/pdf,.pdf"></label>
-        <div id="pdfStatus" class="status">Nessun PDF caricato.</div>
-      </div>
+    <div class="importBox">
+      <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
+      <label class="fileLabel">Carica PDF listino<input id="pdfFile" type="file" accept="application/pdf,.pdf"></label>
+      <div id="status" class="status">Nessun listino caricato.</div>
+      <div id="pdfStatus" class="status">Nessun PDF caricato.</div>
     </div>
   </section>
 
-  <div id="privacyNotice" class="notice hide">Listino e PDF salvati localmente su questo dispositivo. Puoi cancellarli con il pulsante “Cancella dati locali”.</div>
+  <div id="privacyNotice" class="notice hide">Listino e PDF restano salvati localmente su questo dispositivo. Puoi cancellarli con il pulsante “Cancella dati locali”.</div>
 
   <main class="grid">
     <section class="panel">
@@ -160,7 +165,7 @@ tr:hover td{background:#fafafa}
           <div class="totalLine"><span>Ricarico</span><b id="markVal">€ 0,00</b></div>
           <div class="totalLine grand"><span>Totale</span><span id="net">€ 0,00</span></div>
         </div>
-        <div class="actions"><button id="copyQuote">Copia testo</button><button class="secondary" id="exportCsv">Export CSV</button></div>
+        <div class="actions"><button id="copyQuote">Copia testo</button><button class="secondary" id="sendWhatsapp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
       </section>
     </aside>
   </main>
@@ -177,65 +182,11 @@ const els={
   privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck')
 };
 let rows=[],filtered=[],quote=[];
-const DB_NAME='listino_configuratore_PRO_db';
-const DB_STORE='files';
-let cachedPdfUrl=null;
-function openDb(){
-  return new Promise((resolve,reject)=>{
-    const req=indexedDB.open(DB_NAME,1);
-    req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);
-    req.onsuccess=()=>resolve(req.result);
-    req.onerror=()=>reject(req.error);
-  });
-}
-async function idbSet(keyName,value){
-  const db=await openDb();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(DB_STORE,'readwrite');
-    tx.objectStore(DB_STORE).put(value,keyName);
-    tx.oncomplete=()=>{db.close();resolve();};
-    tx.onerror=()=>{db.close();reject(tx.error);};
-  });
-}
-async function idbGet(keyName){
-  const db=await openDb();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(DB_STORE,'readonly');
-    const req=tx.objectStore(DB_STORE).get(keyName);
-    req.onsuccess=()=>{db.close();resolve(req.result);};
-    req.onerror=()=>{db.close();reject(req.error);};
-  });
-}
-async function idbDelete(keyName){
-  const db=await openDb();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(DB_STORE,'readwrite');
-    tx.objectStore(DB_STORE).delete(keyName);
-    tx.oncomplete=()=>{db.close();resolve();};
-    tx.onerror=()=>{db.close();reject(tx.error);};
-  });
-}
-async function updatePdfStatus(){
-  try{
-    const pdf=await idbGet('listino_pdf');
-    els.pdfStatus.textContent=pdf?`PDF caricato: ${pdf.name}`:'Nessun PDF caricato.';
-    if(pdf) els.privacyNotice.classList.remove('hide');
-  }catch(e){els.pdfStatus.textContent='PDF non disponibile in questo browser.';}
-}
-async function getPdfUrl(){
-  const pdf=await idbGet('listino_pdf');
-  if(!pdf){alert('Carica prima il PDF del listino.');return null;}
-  if(cachedPdfUrl) URL.revokeObjectURL(cachedPdfUrl);
-  cachedPdfUrl=URL.createObjectURL(new Blob([pdf.data],{type:'application/pdf'}));
-  return cachedPdfUrl;
-}
-async function openPdfAtPage(pageNumber){
-  const page=Number(pageNumber);
-  if(!page || page<1){alert('Pagina PDF non valida.');return;}
-  const url=await getPdfUrl();
-  if(!url)return;
-  window.open(`${url}#page=${page}`,'_blank','noopener');
-}
+const DB_NAME="listino_configuratore_pro_db", DB_STORE="files";
+function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>req.result.createObjectStore(DB_STORE);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function dbSet(key,val){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).put(val,key);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+async function dbGet(key){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readonly");const req=tx.objectStore(DB_STORE).get(key);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function dbClear(){const db=await openDb();return new Promise((resolve,reject)=>{const tx=db.transaction(DB_STORE,"readwrite");tx.objectStore(DB_STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
 const money=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n||0));
 const norm=s=>(s??'').toString().trim();
 const key=s=>norm(s).toLowerCase().replace(/[àá]/g,'a').replace(/[èé]/g,'e').replace(/[ìí]/g,'i').replace(/[òó]/g,'o').replace(/[ùú]/g,'u').replace(/[\s_\-.]/g,'');
@@ -279,13 +230,15 @@ function save(){
   localStorage.setItem('listino_configuratore_rows_PRO',JSON.stringify(rows));
   localStorage.setItem('listino_configuratore_quote_PRO',JSON.stringify(quote));
 }
-function load(){
+async function load(){
   rows=JSON.parse(localStorage.getItem('listino_configuratore_rows_PRO')||'[]');
   quote=JSON.parse(localStorage.getItem('listino_configuratore_quote_PRO')||'[]');
   if(rows.length){
     els.status.textContent=`Listino locale caricato: ${rows.length} articoli`;
     els.privacyNotice.classList.remove('hide');
   }
+  const pdf=await dbGet('listino_pdf').catch(()=>null);
+  if(pdf){els.pdfStatus.innerHTML=`PDF locale caricato: <span class="pdfStatusOk">${escapeHtml(pdf.name||'listino.pdf')}</span>`;els.privacyNotice.classList.remove('hide');}
   buildFilters(); applyFilters(); renderQuote();
 }
 function fillSelect(sel,vals){
@@ -314,24 +267,19 @@ function applyFilters(){
   );
   renderTable(); updateKpi();
 }
-function renderPageButtons(value){
-  const pages=pageTokens(value);
-  if(!pages.length) return escapeHtml(value);
-  return pages.map(p=>`<button class="pageBtn" data-page="${escapeAttr(p)}" title="Apri PDF a pagina ${escapeAttr(p)}">${escapeHtml(p)}</button>`).join(' ');
-}
 function renderTable(){
   if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';return;}
   if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';return;}
-  els.tbody.innerHTML=filtered.map(r=>`<tr>
-    <td class="code">${escapeHtml(r.codice)}</td>
-    <td><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td>
-    <td class="price">${money(r.prezzo)}</td>
-    <td>${renderPageButtons(r.pagina)}</td>
-    <td><span class="small">${escapeHtml(r.categoria)}</span></td>
+  els.tbody.innerHTML=filtered.map(r=>{const pages=pageTokens(r.pagina);const pageHtml=pages.length?pages.map(p=>`<button class="pageBtn" data-page="${p}">Pag. ${p}</button>`).join(' '):escapeHtml(r.pagina);return `<tr>
+    <td data-label="Codice" class="code">${escapeHtml(r.codice)}</td>
+    <td data-label="Descrizione"><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td>
+    <td data-label="Prezzo" class="price">${money(r.prezzo)}</td>
+    <td data-label="Pagina PDF">${pageHtml}<div class="mobileHint">Tocca per aprire il PDF alla pagina indicata.</div></td>
+    <td data-label="Categoria"><span class="small">${escapeHtml(r.categoria)}</span></td>
     <td><button class="addBtn" data-id="${r.id}">+</button></td>
-  </tr>`).join('');
+  </tr>`}).join('');
   els.tbody.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)));
-  els.tbody.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(b.dataset.page));
+  els.tbody.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(Number(b.dataset.page)));
 }
 function updateKpi(){
   els.kArt.textContent=filtered.length || rows.length;
@@ -372,6 +320,25 @@ function exportQuoteCsv(){
 function download(name,text){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
+
+async function openPdfAtPage(pageNumber){
+  const saved=await dbGet('listino_pdf').catch(()=>null);
+  if(!saved){alert('Carica prima il PDF del listino.');return;}
+  const blob=new Blob([saved.data],{type:'application/pdf'});
+  const url=URL.createObjectURL(blob);
+  const target=`${url}#page=${pageNumber}`;
+  const w=window.open(target,'_blank');
+  if(!w){alert('Popup bloccato. Consenti l’apertura delle nuove finestre per questa app.');}
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+}
+async function savePdfFile(file){
+  const data=await file.arrayBuffer();
+  await dbSet('listino_pdf',{name:file.name,type:file.type||'application/pdf',data});
+  els.pdfStatus.innerHTML=`PDF locale caricato: <span class="pdfStatusOk">${escapeHtml(file.name)}</span>`;
+  els.privacyNotice.classList.remove('hide');
+  alert('PDF listino caricato. Ora puoi toccare il numero pagina negli articoli.');
+}
+
 els.file.onchange=async e=>{
   const file=e.target.files[0]; if(!file)return;
   if(!window.XLSX){alert('Libreria Excel non caricata. Apri la app una volta con internet attivo.');return;}
@@ -386,21 +353,14 @@ els.file.onchange=async e=>{
   els.privacyNotice.classList.remove('hide');
   buildFilters(); applyFilters(); renderQuote();
 };
-els.pdfFile.onchange=async e=>{
-  const file=e.target.files[0]; if(!file)return;
-  if(file.type && file.type!=='application/pdf'){alert('Seleziona un file PDF valido.');return;}
-  const data=await file.arrayBuffer();
-  await idbSet('listino_pdf',{name:file.name,type:'application/pdf',data});
-  if(cachedPdfUrl){URL.revokeObjectURL(cachedPdfUrl);cachedPdfUrl=null;}
-  els.pdfStatus.textContent=`PDF caricato: ${file.name}`;
-  els.privacyNotice.classList.remove('hide');
-};
+els.pdfFile.onchange=async e=>{const file=e.target.files[0]; if(file) await savePdfFile(file);};
 ['q','fam','cat','pag'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));
 ['discount','markup'].forEach(id=>document.getElementById(id).addEventListener('input',calcTotals));
 document.getElementById('sortPdf').onclick=()=>{rows.sort((a,b)=>pageNum(a.pagina)-pageNum(b.pagina)||a.codice.localeCompare(b.codice));save();applyFilters();};
-document.getElementById('clearLocal').onclick=async()=>{if(confirm('Cancellare listino, PDF e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows_PRO');localStorage.removeItem('listino_configuratore_quote_PRO');await idbDelete('listino_pdf');location.reload();}};
+document.getElementById('clearLocal').onclick=async()=>{if(confirm('Cancellare listino, PDF e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows_PRO');localStorage.removeItem('listino_configuratore_quote_PRO');await dbClear().catch(()=>{});location.reload();}};
 document.getElementById('emptyQuote').onclick=()=>{quote=[];save();renderQuote();};
 document.getElementById('copyQuote').onclick=async()=>{await navigator.clipboard.writeText(quoteText());alert('Testo preventivo copiato');};
+document.getElementById('sendWhatsapp').onclick=()=>{if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;} const text=encodeURIComponent(quoteText()); window.open(`https://wa.me/?text=${text}`,'_blank');};
 document.getElementById('exportCsv').onclick=exportQuoteCsv;
 document.getElementById('acceptLegal').onclick=()=>{
   if(!els.legalCheck.checked){alert('Devi confermare la presa visione per continuare.');return;}
@@ -410,7 +370,6 @@ document.getElementById('acceptLegal').onclick=()=>{
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
 load();
-updatePdfStatus();
 </script>
 </body>
 </html>
