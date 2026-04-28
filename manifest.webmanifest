@@ -1,13 +1,9 @@
 {
-  "name": "Listino Configuratore",
+  "name": "Configuratore Listino",
   "short_name": "Listino",
-  "description": "Configuratore listini Excel/CSV con dati locali nel browser.",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": ".",
   "display": "standalone",
-  "background_color": "#f4f6fb",
-  "theme_color": "#111827",
-  "icons": [
-    {"src":"icon.svg","sizes":"any","type":"image/svg+xml"}
-  ]
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": []
 }

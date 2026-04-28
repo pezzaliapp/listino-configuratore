@@ -1,128 +1,169 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<title>Listino Configuratore</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuratore Listino</title>
 <link rel="manifest" href="manifest.webmanifest">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--soft:#eef2ff;--ok:#065f46;--danger:#991b1b;--shadow:0 20px 45px rgba(15,23,42,.10)}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}button,input,select{font:inherit}button{border:0;border-radius:14px;background:var(--brand);color:white;padding:11px 15px;font-weight:750;cursor:pointer}button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}.app{max-width:1440px;margin:0 auto;padding:18px}.hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:28px;padding:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:1.25fr .75fr;gap:18px;align-items:end}.hero h1{margin:0;font-size:clamp(28px,4vw,48px);letter-spacing:-.04em}.hero p{margin:10px 0 0;color:#d1d5db;max-width:820px;line-height:1.45}.importBox{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:16px}.fileLabel{display:block;background:white;color:#111827;border-radius:16px;padding:15px;text-align:center;font-weight:850;cursor:pointer}.fileLabel input{display:none}.status{margin-top:10px;color:#e5e7eb;font-size:14px}.grid{display:grid;grid-template-columns:1fr 390px;gap:18px;margin-top:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:0 10px 25px rgba(15,23,42,.05);overflow:hidden}.panelHead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;justify-content:space-between}.panelHead h2{font-size:18px;margin:0}.toolbar{padding:14px 18px;display:grid;grid-template-columns:1.5fr repeat(3,1fr);gap:10px;border-bottom:1px solid var(--line)}.toolbar input,.toolbar select,.quoteInput{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:#fff;color:var(--ink)}.chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}.chip{border:1px solid var(--line);background:#fff;color:#374151;border-radius:999px;padding:8px 11px;font-size:13px;font-weight:750}.chip.active{background:#111827;color:white;border-color:#111827}.tableWrap{overflow:auto;max-height:calc(100vh - 335px)}table{width:100%;border-collapse:separate;border-spacing:0}th{position:sticky;top:0;background:#f9fafb;z-index:1;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;border-bottom:1px solid var(--line);padding:10px}td{border-bottom:1px solid var(--line);padding:11px 10px;vertical-align:top}tr:hover td{background:#fafafa}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:850}.price{text-align:right;font-weight:850;white-space:nowrap}.small{font-size:12px;color:var(--muted)}.addBtn{padding:8px 10px;border-radius:11px}.empty{padding:32px;text-align:center;color:var(--muted)}.side{display:flex;flex-direction:column;gap:18px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px}.kpi{background:#f9fafb;border:1px solid var(--line);border-radius:18px;padding:13px}.kpi b{font-size:22px;display:block}.quoteList{max-height:360px;overflow:auto}.quoteRow{padding:13px 16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr 70px 28px;gap:10px;align-items:center}.quoteRow input{border:1px solid var(--line);border-radius:10px;padding:8px;width:100%}.totals{padding:16px;display:grid;gap:8px}.totalLine{display:flex;justify-content:space-between}.grand{font-size:22px;font-weight:900;border-top:1px solid var(--line);padding-top:12px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 16px}.notice{padding:14px 18px;background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;font-size:14px}.hide{display:none!important}@media(max-width:980px){.hero,.grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.tableWrap{max-height:none}.side{order:-1}.app{padding:10px}.hero{border-radius:22px;padding:18px}td:nth-child(4),th:nth-child(4),td:nth-child(5),th:nth-child(5){display:none}.actions{grid-template-columns:1fr}}@media(max-width:560px){.toolbar{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.hero h1{font-size:30px}table{font-size:14px}.price{font-size:13px}.panelHead{align-items:flex-start;flex-direction:column}.quoteRow{grid-template-columns:1fr 58px 28px}}
+body { font-family: Arial; margin:20px; }
+table { width:100%; border-collapse: collapse; margin-top:10px;}
+th, td { border:1px solid #ccc; padding:8px; }
+input, select, button { margin:5px; padding:8px;}
+#modal { position:fixed; top:0; left:0; width:100%; height:100%;
+background:rgba(0,0,0,0.6); display:flex;
+align-items:center; justify-content:center; z-index:9999;}
+.modal-box { background:#fff; max-width:500px; padding:20px; border-radius:12px;}
 </style>
 </head>
+
 <body>
-<div class="app">
-  <section class="hero">
-    <div>
-      <h1>Configuratore Listino</h1>
-      <p>Carica Excel o CSV dalla app. Il file resta solo nel browser: non viene pubblicato su GitHub, non viene inviato a server, non entra nella repo.</p>
-    </div>
-    <div class="importBox">
-      <label class="fileLabel">Carica listino Excel / CSV<input id="file" type="file" accept=".xlsx,.xls,.csv"></label>
-      <div id="status" class="status">Nessun listino caricato.</div>
-    </div>
-  </section>
 
-  <div id="privacyNotice" class="notice hide">Listino salvato localmente su questo dispositivo. Puoi cancellarlo con il pulsante “Cancella dati locali”.</div>
+<div id="modal">
+<div class="modal-box">
+<h3>Utilizzo applicazione</h3>
+<p>Questa applicazione elabora i dati esclusivamente sul dispositivo dell’utente.
+I file caricati non vengono trasmessi né salvati su server esterni.</p>
 
-  <main class="grid">
-    <section class="panel">
-      <div class="panelHead">
-        <h2>Articoli</h2>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="secondary" id="sortPdf">Ordina come PDF</button>
-          <button class="danger" id="clearLocal">Cancella dati locali</button>
-        </div>
-      </div>
-      <div class="toolbar">
-        <input id="q" placeholder="Cerca codice, descrizione, famiglia...">
-        <select id="fam"><option value="">Tutte le famiglie</option></select>
-        <select id="cat"><option value="">Tutte le categorie</option></select>
-        <select id="pag"><option value="">Tutte le pagine PDF</option></select>
-      </div>
-      <div id="chips" class="chips"></div>
-      <div class="tableWrap">
-        <table>
-          <thead><tr><th>Codice</th><th>Descrizione</th><th>Prezzo</th><th>Pag.</th><th>Categoria</th><th></th></tr></thead>
-          <tbody id="tbody"><tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr></tbody>
-        </table>
-      </div>
-    </section>
+<p>L’utente è responsabile della correttezza dei dati utilizzati (prezzi, codici, descrizioni).
+Verificare sempre i dati prima dell’utilizzo commerciale.</p>
 
-    <aside class="side">
-      <section class="panel">
-        <div class="panelHead"><h2>Riepilogo</h2></div>
-        <div class="kpis">
-          <div class="kpi"><span class="small">Articoli</span><b id="kArt">0</b></div>
-          <div class="kpi"><span class="small">Famiglie</span><b id="kFam">0</b></div>
-          <div class="kpi"><span class="small">Nel preventivo</span><b id="kQuote">0</b></div>
-        </div>
-      </section>
-
-      <section class="panel">
-        <div class="panelHead"><h2>Preventivo rapido</h2><button class="ghost" id="emptyQuote">Svuota</button></div>
-        <div style="padding:14px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <input class="quoteInput" id="discount" type="number" step="0.1" placeholder="Sconto %">
-          <input class="quoteInput" id="markup" type="number" step="0.1" placeholder="Ricarico %">
-        </div>
-        <div id="quoteList" class="quoteList"><div class="empty">Nessun articolo selezionato.</div></div>
-        <div class="totals">
-          <div class="totalLine"><span>Lordo</span><b id="gross">€ 0,00</b></div>
-          <div class="totalLine"><span>Sconto</span><b id="discVal">€ 0,00</b></div>
-          <div class="totalLine"><span>Ricarico</span><b id="markVal">€ 0,00</b></div>
-          <div class="totalLine grand"><span>Totale</span><span id="net">€ 0,00</span></div>
-        </div>
-        <div class="actions"><button id="copyQuote">Copia testo</button><button class="secondary" id="exportCsv">Export CSV</button></div>
-      </section>
-    </aside>
-  </main>
+<button onclick="acceptModal()">Accetta e continua</button>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</div>
+
+<h2>Configuratore Listino</h2>
+
+<p><b>Carica un file Excel o CSV. I dati restano salvati solo sul tuo dispositivo e non vengono inviati a server.</b></p>
+
+<input type="file" id="fileInput" accept=".xlsx,.csv">
+<button onclick="clearData()">Cancella dati locali</button>
+
+<br>
+
+<input type="text" id="search" placeholder="Cerca codice o descrizione">
+<input type="text" id="pageFilter" placeholder="Filtro pagina (es. 14)">
+<select id="categoryFilter"><option value="">Tutte categorie</option></select>
+
+<table>
+<thead>
+<tr>
+<th>Codice</th>
+<th>Descrizione</th>
+<th>Prezzo</th>
+<th>Pagina</th>
+<th>Categoria</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
 <script>
-const els={file:document.getElementById('file'),status:document.getElementById('status'),tbody:document.getElementById('tbody'),q:document.getElementById('q'),fam:document.getElementById('fam'),cat:document.getElementById('cat'),pag:document.getElementById('pag'),chips:document.getElementById('chips'),kArt:document.getElementById('kArt'),kFam:document.getElementById('kFam'),kQuote:document.getElementById('kQuote'),quoteList:document.getElementById('quoteList'),discount:document.getElementById('discount'),markup:document.getElementById('markup'),gross:document.getElementById('gross'),discVal:document.getElementById('discVal'),markVal:document.getElementById('markVal'),net:document.getElementById('net'),privacyNotice:document.getElementById('privacyNotice')};
-let rows=[],filtered=[],quote=[];
-const money=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n||0));
-const norm=s=>(s??'').toString().trim();
-const key=s=>norm(s).toLowerCase().replace(/[\s_\-.]/g,'');
-const pageNum=v=>{const m=norm(v).match(/\d+/);return m?Number(m[0]):9999};
-const pageTokens=v=>norm(v).match(/\d+/g)||[];
-const pageMatch=(cell,selected)=>!selected||pageTokens(cell).includes(String(selected));
-function fixCategory(r){
-  const d=key(r.descrizione), code=key(r.codice);
-  if(code==='20100402'||d.includes('gruppo esterno per gonfiaggio ruote tubeless')){
-    r.famiglia='Smontagomme';
-    r.categoria='Accessori smontagomme auto | Gonfiaggio tubeless';
-  }
-  return r;
+
+let data = [];
+
+function acceptModal(){
+ localStorage.setItem("accepted","true");
+ document.getElementById("modal").style.display="none";
 }
-function pick(o,names){const m={};Object.keys(o).forEach(k=>m[key(k)]=o[k]);for(const n of names){const v=m[key(n)];if(v!==undefined&&v!==null&&v!=='')return v}return ''}
-function normalize(raw,i){return fixCategory({id:i+1,codice:norm(pick(raw,['Codice','Code','Cod.','CODICE ARTICOLO'])),descrizione:norm(pick(raw,['Descrizione','Description','Descrizione codice','Articolo'])),prezzo:Number(String(pick(raw,['Prezzo_EUR','Prezzo','Prezzo EUR','Price','Listino'])).replace(/\./g,'').replace(',','.'))||0,pagina:norm(pick(raw,['Pagine','Pagina','Pag','PDF','Page'])),famiglia:norm(pick(raw,['Famiglia','Family','Gruppo'])),categoria:norm(pick(raw,['Categoria','Category','Sottocategoria']))})}
-function save(){localStorage.setItem('listino_configuratore_rows',JSON.stringify(rows));localStorage.setItem('listino_configuratore_quote',JSON.stringify(quote))}
-function load(){rows=JSON.parse(localStorage.getItem('listino_configuratore_rows')||'[]');quote=JSON.parse(localStorage.getItem('listino_configuratore_quote')||'[]');if(rows.length){els.status.textContent=`Listino locale caricato: ${rows.length} articoli`;els.privacyNotice.classList.remove('hide')}buildFilters();applyFilters();renderQuote()}
-function buildFilters(){fillSelect(els.fam,[...new Set(rows.map(r=>r.famiglia).filter(Boolean))].sort());fillSelect(els.cat,[...new Set(rows.map(r=>r.categoria).filter(Boolean))].sort());fillSelect(els.pag,[...new Set(rows.map(r=>r.pagina).filter(Boolean))].sort((a,b)=>pageNum(a)-pageNum(b)));renderChips()}
-function fillSelect(sel,vals){const first=sel.options[0].textContent;sel.innerHTML=`<option value="">${first}</option>`+vals.map(v=>`<option>${escapeHtml(v)}</option>`).join('')}
-function renderChips(){const top=[...new Set(rows.map(r=>r.famiglia).filter(Boolean))].slice(0,8);els.chips.innerHTML=top.map(v=>`<button class="chip" data-fam="${escapeAttr(v)}">${escapeHtml(v)}</button>`).join('');els.chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{els.fam.value=b.dataset.fam;applyFilters()})}
-function applyFilters(){const q=key(els.q.value),f=els.fam.value,c=els.cat.value,p=els.pag.value;filtered=rows.filter(r=>(!q||key(r.codice+' '+r.descrizione+' '+r.famiglia+' '+r.categoria).includes(q))&&(!f||r.famiglia===f)&&(!c||r.categoria===c)&&pageMatch(r.pagina,p));renderTable();updateKpi()}
-function renderTable(){if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';return}if(!filtered.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Nessun articolo trovato.</td></tr>';return}els.tbody.innerHTML=filtered.map(r=>`<tr><td class="code">${escapeHtml(r.codice)}</td><td><b>${escapeHtml(r.descrizione)}</b><div class="small">${escapeHtml(r.famiglia)}</div></td><td class="price">${money(r.prezzo)}</td><td>${escapeHtml(r.pagina)}</td><td><span class="small">${escapeHtml(r.categoria)}</span></td><td><button class="addBtn" data-id="${r.id}">+</button></td></tr>`).join('');els.tbody.querySelectorAll('button').forEach(b=>b.onclick=()=>addQuote(Number(b.dataset.id)))}
-function updateKpi(){els.kArt.textContent=filtered.length||rows.length;els.kFam.textContent=new Set(rows.map(r=>r.famiglia).filter(Boolean)).size;els.kQuote.textContent=quote.reduce((s,x)=>s+x.qta,0)}
-function addQuote(id){const r=rows.find(x=>x.id===id);if(!r)return;const ex=quote.find(x=>x.id===id);ex?ex.qta++:quote.push({...r,qta:1});save();renderQuote()}
-function renderQuote(){updateKpi();if(!quote.length){els.quoteList.innerHTML='<div class="empty">Nessun articolo selezionato.</div>'}else{els.quoteList.innerHTML=quote.map(x=>`<div class="quoteRow"><div><b>${escapeHtml(x.codice)}</b><div class="small">${escapeHtml(x.descrizione)}</div><div><b>${money(x.prezzo*x.qta)}</b></div></div><input type="number" min="1" value="${x.qta}" data-qta="${x.id}"><button class="danger" data-del="${x.id}">×</button></div>`).join('');els.quoteList.querySelectorAll('[data-qta]').forEach(i=>i.oninput=()=>{const x=quote.find(q=>q.id==i.dataset.qta);x.qta=Math.max(1,Number(i.value)||1);save();renderQuote()});els.quoteList.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{quote=quote.filter(q=>q.id!=b.dataset.del);save();renderQuote()})}calcTotals()}
-function calcTotals(){const gross=quote.reduce((s,x)=>s+x.prezzo*x.qta,0),d=Number(els.discount.value)||0,m=Number(els.markup.value)||0,disc=gross*d/100,base=gross-disc,mark=base*m/100,net=base+mark;els.gross.textContent=money(gross);els.discVal.textContent='− '+money(disc);els.markVal.textContent='+ '+money(mark);els.net.textContent=money(net)}
-function quoteText(){return 'PREVENTIVO RAPIDO\n'+quote.map((x,i)=>`${i+1}. ${x.codice} - ${x.descrizione}\nQ.tà ${x.qta} | Prezzo ${money(x.prezzo)} | Totale ${money(x.prezzo*x.qta)}`).join('\n\n')+`\n\nTotale: ${els.net.textContent}\nPrezzi IVA esclusa.`}
-function exportQuoteCsv(){const lines=[['Codice','Descrizione','Prezzo','Qta','Totale'],...quote.map(x=>[x.codice,x.descrizione,x.prezzo,x.qta,x.prezzo*x.qta])];download('preventivo.csv',lines.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n'))}
-function download(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function escapeHtml(s){return norm(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-function escapeAttr(s){return escapeHtml(s).replace(/'/g,'&#39;')}
-els.file.onchange=async e=>{const file=e.target.files[0];if(!file)return;if(!window.XLSX){alert('Libreria Excel non caricata. Apri la app una volta con internet attivo.');return}const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const raw=XLSX.utils.sheet_to_json(ws,{defval:''});rows=raw.map(normalize).filter(r=>r.codice||r.descrizione);quote=[];save();els.status.textContent=`Caricato: ${file.name} — ${rows.length} articoli`;els.privacyNotice.classList.remove('hide');buildFilters();applyFilters();renderQuote()};
-['q','fam','cat','pag'].forEach(id=>document.getElementById(id).addEventListener('input',applyFilters));['discount','markup'].forEach(id=>document.getElementById(id).addEventListener('input',calcTotals));
-document.getElementById('sortPdf').onclick=()=>{rows.sort((a,b)=>pageNum(a.pagina)-pageNum(b.pagina)||a.codice.localeCompare(b.codice));save();applyFilters()};
-document.getElementById('clearLocal').onclick=()=>{if(confirm('Cancellare listino e preventivo salvati su questo dispositivo?')){localStorage.removeItem('listino_configuratore_rows');localStorage.removeItem('listino_configuratore_quote');location.reload()}};
-document.getElementById('emptyQuote').onclick=()=>{quote=[];save();renderQuote()};
-document.getElementById('copyQuote').onclick=async()=>{await navigator.clipboard.writeText(quoteText());alert('Testo preventivo copiato')};
-document.getElementById('exportCsv').onclick=exportQuoteCsv;
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
-load();
+
+window.onload = ()=>{
+ if(localStorage.getItem("accepted")!=="true"){
+   document.getElementById("modal").style.display="flex";
+ } else {
+   document.getElementById("modal").style.display="none";
+ }
+
+ const saved = localStorage.getItem("listino");
+ if(saved){
+   data = JSON.parse(saved);
+   render();
+   populateCategories();
+ }
+}
+
+document.getElementById("fileInput").addEventListener("change", handleFile);
+
+function handleFile(e){
+ const file = e.target.files[0];
+ const reader = new FileReader();
+
+ reader.onload = function(evt){
+   const wb = XLSX.read(evt.target.result,{type:'binary'});
+   const sheet = wb.Sheets[wb.SheetNames[0]];
+   data = XLSX.utils.sheet_to_json(sheet);
+
+   localStorage.setItem("listino", JSON.stringify(data));
+   populateCategories();
+   render();
+ }
+
+ reader.readAsBinaryString(file);
+}
+
+function populateCategories(){
+ const set = new Set();
+ data.forEach(r=>{
+   if(r.Categoria) set.add(r.Categoria);
+ });
+ const select = document.getElementById("categoryFilter");
+ select.innerHTML = '<option value="">Tutte categorie</option>';
+ set.forEach(c=>{
+   select.innerHTML += `<option value="${c}">${c}</option>`;
+ });
+}
+
+function render(){
+ const tbody = document.getElementById("tbody");
+ tbody.innerHTML = "";
+
+ const search = document.getElementById("search").value.toLowerCase();
+ const page = document.getElementById("pageFilter").value;
+ const cat = document.getElementById("categoryFilter").value;
+
+ data.forEach(r=>{
+
+   let pages = (r.Pagina || "").toString();
+
+   if(search && !( (r.Codice||"").toString().toLowerCase().includes(search) ||
+                  (r.Descrizione||"").toLowerCase().includes(search))) return;
+
+   if(page){
+     if(!pages.split(",").map(p=>p.trim()).includes(page)) return;
+   }
+
+   if(cat && r.Categoria !== cat) return;
+
+   const tr = document.createElement("tr");
+
+   tr.innerHTML = `
+   <td>${r.Codice||""}</td>
+   <td>${r.Descrizione||""}</td>
+   <td>${r.Prezzo||""}</td>
+   <td>${pages}</td>
+   <td>${r.Categoria||""}</td>
+   `;
+
+   tbody.appendChild(tr);
+ });
+
+}
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("pageFilter").addEventListener("input", render);
+document.getElementById("categoryFilter").addEventListener("change", render);
+
+function clearData(){
+ localStorage.removeItem("listino");
+ location.reload();
+}
+
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("sw.js");
+}
+
 </script>
+
 </body>
 </html>
