@@ -7,7 +7,8 @@
     "type": "pdf",
     "expiresAt": "2026-06-30",
     "active": true,
-    "createdAt": "2026-04-29"
+    "createdAt": "2026-04-29",
+    "startsAt": "2026-04-29"
   },
   {
     "id": "b224-helper-b300-042026",
@@ -17,6 +18,7 @@
     "type": "pdf",
     "expiresAt": "2026-06-30",
     "active": true,
-    "createdAt": "2026-04-29"
+    "createdAt": "2026-04-29",
+    "startsAt": "2026-04-29"
   }
 ]
