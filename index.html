@@ -453,9 +453,39 @@ function renderPromos(promos){
   const newIds=visible.map(promoId).filter(id=>!seen.includes(id));
   if(newIds.length){setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);localStorage.setItem('listino_promo_seen_ids', JSON.stringify([...new Set([...seen, ...visible.map(promoId)])]));}
 }
+const PROMO_ADMIN_DRAFT_KEY='listino_promo_admin_draft_v2';
+function readAdminPromoDraft(){
+  try{
+    const raw=localStorage.getItem(PROMO_ADMIN_DRAFT_KEY);
+    if(!raw) return null;
+    const data=JSON.parse(raw);
+    return Array.isArray(data)?data:null;
+  }catch(e){
+    console.warn('Bozza admin promo non valida', e);
+    return null;
+  }
+}
 async function loadPromos(){
   if(!els.promoList) return;
-  try{els.promoList.innerHTML='<div class="promoEmpty">Caricamento promo...</div>';const res=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});if(!res.ok) throw new Error('promo.json non trovato');const data=await res.json();renderPromos(data);}catch(e){console.warn(e);els.promoList.innerHTML='<div class="promoEmpty">Non riesco a leggere <b>promo/promo.json</b>. Verifica che il file sia presente nella repo.</div>';}
+  els.promoList.innerHTML='<div class="promoEmpty">Caricamento promo...</div>';
+
+  // Sul tuo dispositivo la app usa prima la bozza salvata da Admin Promo.
+  const localDraft=readAdminPromoDraft();
+  if(localDraft){
+    renderPromos(localDraft);
+    return;
+  }
+
+  // Per gli utenti legge invece il promo.json pubblicato su GitHub.
+  try{
+    const res=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('promo.json non trovato');
+    const data=await res.json();
+    renderPromos(data);
+  }catch(e){
+    console.warn(e);
+    els.promoList.innerHTML='<div class="promoEmpty">Non riesco a leggere <b>promo/promo.json</b>. Verifica che il file sia presente nella repo.</div>';
+  }
 }
 
 async function updatePdfStatus(){

@@ -5,66 +5,170 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin Promo - Configuratore Listino PRO</title>
 <style>
-:root{--bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--danger:#991b1b}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.app{max-width:980px;margin:0 auto;padding:18px}.hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:26px;padding:24px;margin-bottom:18px}.hero h1{margin:0;font-size:clamp(28px,4vw,44px)}.hero p{color:#e5e7eb;line-height:1.45}.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden;margin-bottom:16px}.head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}h2{margin:0;font-size:18px}.body{padding:16px;display:grid;gap:12px}button{border:0;border-radius:14px;background:var(--brand);color:#fff;padding:11px 14px;font-weight:800;cursor:pointer}button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}input,textarea{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px;font:inherit}.row{border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}.small{font-size:13px;color:var(--muted);line-height:1.45}.hide{display:none!important}.notice{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:16px;padding:12px}.ok{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:12px}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:12px;white-space:pre-wrap;max-height:260px;overflow:auto}@media(max-width:680px){.grid{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}.actions{display:grid}.actions button{width:100%}}
+:root{--bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--danger:#991b1b;--ok:#166534;--blue:#1d4ed8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.app{max-width:1040px;margin:0 auto;padding:18px}.hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:26px;padding:24px;margin-bottom:18px}.hero h1{margin:0;font-size:clamp(28px,4vw,44px)}.hero p{color:#e5e7eb;line-height:1.45}.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden;margin-bottom:16px}.head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}h2{margin:0;font-size:18px}.body{padding:16px;display:grid;gap:12px}button,.btn{border:0;border-radius:14px;background:var(--brand);color:#fff;padding:11px 14px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}button.secondary,.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}button.blue{background:#2563eb}button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}button.ok{background:#dcfce7;color:var(--ok);border:1px solid #bbf7d0}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px;font:inherit;background:#fff}.row{border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}.small{font-size:13px;color:var(--muted);line-height:1.45}.hide{display:none!important}.notice{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:16px;padding:12px;line-height:1.45}.okbox{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:12px;line-height:1.45}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:12px;white-space:pre-wrap;max-height:320px;overflow:auto}.status{font-size:13px;font-weight:900;color:var(--muted)}.status.active{color:var(--ok)}.status.off{color:var(--danger)}.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900;background:#eef2ff;color:#1d4ed8;border:1px solid #c7d2fe}.topTools{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}@media(max-width:680px){.grid,.topTools{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}.actions{display:grid}.actions button,.actions .btn{width:100%}}
 </style>
 </head>
 <body>
 <div class="app">
   <section class="hero">
     <h1>Admin Promo</h1>
-    <p>Gestione senza Cloudflare: modifichi data inizio, data scadenza, disattivi o cancelli una promo, poi scarichi il nuovo <b>promo.json</b> e lo carichi su GitHub nella cartella <b>promo/</b>.</p>
+    <p>Gestione senza Cloudflare: puoi caricare un <b>promo.json</b>, modificare data inizio/scadenza, disattivare o cancellare una promo, poi scarichi il nuovo file e lo sostituisci su GitHub nella cartella <b>promo/</b>.</p>
   </section>
+
   <section class="panel" id="loginPanel">
     <div class="head"><h2>Accesso amministratore</h2></div>
     <div class="body">
       <input id="pass" type="password" placeholder="Password admin">
       <button id="unlock">Entra</button>
-      <div class="small">Password predefinita: <b>admin</b>. Puoi cambiarla dentro questo file, ma su GitHub non è una protezione server reale.</div>
+      <div class="small">Password predefinita: <b>admin</b>. Puoi cambiarla dentro questo file. Senza backend non è una protezione server reale.</div>
     </div>
   </section>
+
   <section class="panel hide" id="adminPanel">
-    <div class="head"><h2>Promo nel file promo.json</h2><div class="actions"><button class="secondary" id="reload">Ricarica</button><button id="download">Scarica promo.json</button></div></div>
+    <div class="head">
+      <h2>Promo nel file promo.json</h2>
+      <div class="actions">
+        <a class="btn secondary" href="index.html">Torna alla app</a>
+        <button class="secondary" id="reload">Ricarica da GitHub</button>
+        <button id="download">Scarica promo.json</button>
+      </div>
+    </div>
     <div class="body">
-      <div class="notice"><b>Per cancellarla dalle app:</b> premi <b>Disattiva</b> o <b>Elimina</b>, poi scarica il file e sostituisci <b>promo/promo.json</b> su GitHub. Gli utenti vedranno l’aggiornamento riaprendo la PWA o premendo “Aggiorna”.</div>
-      <div class="ok"><b>Data inizio:</b> la promo non appare prima di questa data. <b>Scadenza:</b> dopo questa data non viene più mostrata.</div>
+      <div class="notice"><b>Importante:</b> questa pagina non può scrivere direttamente su GitHub. Le modifiche vengono salvate localmente su questo browser e nel JSON qui sotto. Per aggiornare tutte le app devi premere <b>Scarica promo.json</b> e sostituire <b>promo/promo.json</b> su GitHub.</div>
+      <div class="okbox"><b>Ora il salvataggio funziona:</b> ogni modifica, Disattiva, Riattiva o Elimina viene salvata subito in locale. Se esci e rientri in Admin la ritrovi. Poi scarichi il JSON definitivo.</div>
+
+      <div class="panel" style="box-shadow:none;margin:0">
+        <div class="head"><h2>Carica / importa JSON</h2></div>
+        <div class="body">
+          <div class="topTools">
+            <input id="jsonFile" type="file" accept="application/json,.json">
+            <button class="blue" id="importJson">Importa JSON</button>
+          </div>
+          <textarea id="pasteJson" rows="5" placeholder="Oppure incolla qui il contenuto di promo.json e premi Importa testo JSON"></textarea>
+          <div class="actions"><button class="secondary" id="importText">Importa testo JSON</button><button class="danger" id="clearDraft">Cancella bozza locale</button></div>
+          <div class="small">Se hai un JSON nuovo, caricalo qui. Verrà usato come base per modifiche, date e cancellazioni.</div>
+        </div>
+      </div>
+
+      <div id="saveState" class="small"><span class="pill">Bozza locale attiva</span></div>
       <div id="rows"></div>
       <div class="actions"><button id="add">Aggiungi riga promo</button><button class="secondary" id="copy">Copia JSON</button></div>
-      <div class="small">Nota: se vuoi rimuovere anche il file PDF/JPG fisico, cancellalo dalla cartella <b>promo/</b> su GitHub. Se basta non mostrarlo più, è sufficiente disattivarlo o eliminarlo dal JSON.</div>
+      <div class="small">Per rimuovere anche il file PDF/JPG fisico, cancellalo dalla cartella <b>promo/</b> su GitHub. Se basta non mostrarlo più, usa <b>Disattiva</b> oppure <b>Elimina dal JSON</b>.</div>
       <div id="jsonPreview" class="code"></div>
     </div>
   </section>
 </div>
 <script>
 const ADMIN_PASSWORD='admin';
+const DRAFT_KEY='listino_promo_admin_draft_v2';
 let promos=[];
 const $=id=>document.getElementById(id);
 function today(){return new Date().toISOString().slice(0,10)}
-function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
-async function load(){
-  try{const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});promos=await r.json();if(!Array.isArray(promos))promos=[]}catch(e){promos=[];alert('Non riesco a leggere promo/promo.json. Puoi comunque creare un nuovo JSON.')}
+function uid(){return 'promo-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)}
+function esc(s){return String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
+function toIsoDate(v){
+  if(!v) return '';
+  const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  const d=new Date(s);
+  if(!Number.isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return '';
+}
+function normalize(p={}){
+  const url=p.url||p.file||p.href||'';
+  const type=p.type||((url||'').toLowerCase().endsWith('.pdf')?'pdf':'image');
+  return {
+    id:p.id||uid(),
+    title:p.title||p.titolo||'',
+    description:p.description||p.descrizione||'',
+    url:url,
+    type:type,
+    startsAt:toIsoDate(p.startsAt||p.start||p.validFrom||p.from||''),
+    expiresAt:toIsoDate(p.expiresAt||p.expiry||p.validUntil||p.until||p.scadenza||''),
+    active:p.active!==false,
+    createdAt:toIsoDate(p.createdAt||p.created||today())||today()
+  };
+}
+function saveDraft(){
+  localStorage.setItem(DRAFT_KEY, JSON.stringify(promos.map(normalize), null, 2));
+  $('saveState').innerHTML='<span class="pill">Salvato in locale</span> Scarica il JSON per pubblicarlo su GitHub.';
+  updatePreview();
+}
+function currentJson(){return JSON.stringify(promos.map(normalize),null,2)}
+function updatePreview(){if($('jsonPreview')) $('jsonPreview').textContent=currentJson();}
+async function loadFromGithub(){
+  try{
+    const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
+    const data=await r.json();
+    if(!Array.isArray(data)) throw new Error('Formato JSON non valido');
+    promos=data.map(normalize);
+    saveDraft();
+    render();
+    alert('Promo ricaricate da GitHub e salvate come bozza locale.');
+  }catch(e){alert('Non riesco a leggere promo/promo.json da GitHub. Puoi importare un JSON manualmente.');}
+}
+async function loadInitial(){
+  const draft=localStorage.getItem(DRAFT_KEY);
+  if(draft){
+    try{promos=JSON.parse(draft).map(normalize);render();return;}catch(e){localStorage.removeItem(DRAFT_KEY)}
+  }
+  try{
+    const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
+    const data=await r.json();
+    promos=Array.isArray(data)?data.map(normalize):[];
+    saveDraft();
+  }catch(e){promos=[];alert('Non riesco a leggere promo/promo.json. Puoi importare o creare un nuovo JSON.');}
   render();
 }
-function normalize(p){return {id:p.id||('promo-'+Date.now()),title:p.title||'',description:p.description||'',url:p.url||'',type:p.type||((p.url||'').toLowerCase().endsWith('.pdf')?'pdf':'image'),startsAt:p.startsAt||p.start||'',expiresAt:p.expiresAt||p.expiry||'',active:p.active!==false,createdAt:p.createdAt||today()}}
-function currentJson(){return JSON.stringify(promos.map(normalize),null,2)}
+function readInputsForRow(i){
+  document.querySelectorAll(`[data-i="${i}"]`).forEach(inp=>{
+    promos[i][inp.dataset.f]=inp.type==='checkbox'?inp.checked:inp.value.trim();
+  });
+  promos[i]=normalize(promos[i]);
+}
 function render(){
-  $('rows').innerHTML=promos.map((p,i)=>`<div class="row">
-    <div class="grid"><label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label><label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt||p.start)}"></label></div>
-    <div class="grid"><label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt||p.expiry)}"></label><label>Tipo<input data-i="${i}" data-f="type" value="${esc(p.type||'pdf')}"></label></div>
+  $('rows').innerHTML=promos.map((p0,i)=>{const p=normalize(p0);promos[i]=p;return `<div class="row">
+    <div class="grid"><label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label><label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"></label></div>
+    <div class="grid"><label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"></label><label>Tipo<select data-i="${i}" data-f="type"><option value="pdf" ${p.type==='pdf'?'selected':''}>PDF</option><option value="image" ${p.type==='image'?'selected':''}>Immagine</option></select></label></div>
     <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
     <div class="grid"><label>File / URL<input data-i="${i}" data-f="url" value="${esc(p.url)}"></label><label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label></div>
-    <div class="small">Stato: <b>${p.active===false?'DISATTIVATA':'ATTIVA'}</b></div>
-    <div class="actions"><button data-save="${i}">Salva riga</button><button class="danger" data-toggle="${i}">${p.active===false?'Riattiva':'Disattiva'}</button><button class="danger" data-del="${i}">Elimina dal JSON</button></div>
-  </div>`).join('') || '<div class="small">Nessuna promo presente.</div>';
-  document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save;document.querySelectorAll(`[data-i="${i}"]`).forEach(inp=>promos[i][inp.dataset.f]=inp.value.trim());if(promos[i].active!==false)promos[i].active=true;render()});
-  document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{const i=+b.dataset.toggle;promos[i].active=promos[i].active===false;render()});
-  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const i=+b.dataset.del;if(confirm('Eliminare questa promo dal JSON?')){promos.splice(i,1);render()}});
-  $('jsonPreview').textContent=currentJson();
+    <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'}</div>
+    <div class="actions"><button data-save="${i}">Salva riga</button><button class="${p.active?'danger':'ok'}" data-toggle="${i}">${p.active?'Disattiva':'Riattiva'}</button><button class="danger" data-del="${i}">Elimina dal JSON</button></div>
+  </div>`}).join('') || '<div class="small">Nessuna promo presente.</div>';
+
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    el.oninput=()=>{const i=+el.dataset.i;readInputsForRow(i);saveDraft();};
+    el.onchange=()=>{const i=+el.dataset.i;readInputsForRow(i);saveDraft();};
+  });
+  document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save;readInputsForRow(i);saveDraft();render();alert('Riga salvata nella bozza locale. Ora scarica promo.json per pubblicarla.');});
+  document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{const i=+b.dataset.toggle;readInputsForRow(i);promos[i].active=!promos[i].active;saveDraft();render();});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const i=+b.dataset.del;if(confirm('Eliminare questa promo dal JSON?')){promos.splice(i,1);saveDraft();render();}});
+  updatePreview();
 }
-function downloadJson(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([currentJson()],{type:'application/json'}));a.download='promo.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-$('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');load()};
-$('reload').onclick=load;$('download').onclick=downloadJson;$('copy').onclick=async()=>{await navigator.clipboard.writeText(currentJson());alert('JSON copiato')};
-$('add').onclick=()=>{promos.push({id:'promo-'+Date.now(),title:'Nuova promo',description:'',url:'promo/nuova-promo.pdf',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()});render()};
+function downloadJson(){
+  saveDraft();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([currentJson()],{type:'application/json'}));
+  a.download='promo.json';
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importData(data){
+  if(!Array.isArray(data)) throw new Error('Il JSON deve essere una lista/array di promo');
+  promos=data.map(normalize);
+  saveDraft();render();alert('JSON importato e salvato come bozza locale.');
+}
+$('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');loadInitial();};
+$('reload').onclick=()=>{if(confirm('Ricaricare da GitHub? La bozza locale verrà sostituita.')) loadFromGithub();};
+$('download').onclick=downloadJson;
+$('copy').onclick=async()=>{saveDraft();await navigator.clipboard.writeText(currentJson());alert('JSON copiato');};
+$('add').onclick=()=>{promos.push(normalize({id:uid(),title:'Nuova promo',description:'',url:'promo/nuova-promo.pdf',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()}));saveDraft();render();};
+$('clearDraft').onclick=()=>{if(confirm('Cancellare la bozza locale? Poi puoi ricaricare da GitHub o importare un JSON.')){localStorage.removeItem(DRAFT_KEY);promos=[];render();$('saveState').innerHTML='<span class="pill">Bozza locale cancellata</span>';}};
+$('importJson').onclick=async()=>{const f=$('jsonFile').files[0];if(!f){alert('Seleziona prima un file promo.json');return;}try{importData(JSON.parse(await f.text()));}catch(e){alert('JSON non valido: '+e.message)}};
+$('importText').onclick=()=>{try{importData(JSON.parse($('pasteJson').value));}catch(e){alert('JSON non valido: '+e.message)}};
 </script>
 </body>
 </html>
