@@ -111,28 +111,22 @@ tr:hover td{background:#fafafa}
 @media(max-width:700px){.pdfTools{display:none!important}.pageBtn,.mobilePageBtn{display:none!important}td[data-label="Pagina"],td:nth-child(4),th:nth-child(4){display:none!important}.mobileMeta{grid-template-columns:1fr}.mobileActions{grid-template-columns:1fr}}
 
 
-/* Promo Cloud */
-.promoPanel{background:linear-gradient(180deg,#ffffff,#f8fafc)}
-.promoBox{padding:16px;display:grid;gap:12px}
-.promoTop{display:flex;justify-content:space-between;gap:10px;align-items:center}
-.promoTop p{margin:4px 0 0;color:var(--muted);font-size:13px;line-height:1.35}
-.promoList{display:grid;gap:10px}
-.promoCard{border:1px solid var(--line);border-radius:18px;background:#fff;padding:13px;box-shadow:0 8px 18px rgba(15,23,42,.05)}
-.promoCard h3{margin:0 0 6px;font-size:16px;line-height:1.2}
-.promoCard p{margin:0 0 10px;color:#4b5563;font-size:13px;line-height:1.35}
-.promoMeta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.promoBadge{display:inline-flex;border-radius:999px;background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;padding:5px 8px;font-weight:850;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
-.promoBadge.expire{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
-.promoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.promoActions button,.promoActions a{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:11px 12px;font-weight:850;border:1px solid var(--line)}
-.promoActions a{background:#111827;color:#fff;border-color:#111827}.promoActions button{background:#fff;color:#111827}
-.promoConfig{display:grid;gap:10px;padding:14px 16px;border-top:1px solid var(--line);background:#f9fafb}
-.promoConfig input,.promoConfig textarea{width:100%;border:1px solid var(--line);border-radius:14px;padding:11px 12px;background:#fff;color:var(--ink);font:inherit}
-.promoConfig textarea{min-height:70px;resize:vertical}
-.promoConfigGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.promoAlert{position:fixed;left:18px;right:18px;bottom:18px;z-index:11000;background:#111827;color:#fff;border-radius:22px;padding:16px;box-shadow:0 25px 80px rgba(0,0,0,.38);display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;max-width:720px;margin:auto}
-.promoAlert b{display:block;font-size:17px}.promoAlert span{display:block;color:#d1d5db;font-size:13px;margin-top:3px}.promoAlert button{background:#fff;color:#111827}.promoAlert .closePromoAlert{background:#374151;color:#fff}
-@media(max-width:700px){.promoConfigGrid,.promoActions{grid-template-columns:1fr}.promoAlert{grid-template-columns:1fr;bottom:10px;left:10px;right:10px}.promoAlert div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:8px}}
+/* PROMO STATICHE DA GITHUB - ZERO CLOUDFLARE */
+.promoCard{padding:0}
+.promoIntro{padding:14px 16px;border-bottom:1px solid var(--line);color:#6b7280;font-size:13px;line-height:1.35}
+.promoList{display:grid;gap:10px;padding:14px 16px}
+.promoItem{border:1px solid var(--line);border-radius:18px;padding:13px;background:#fff;box-shadow:0 6px 16px rgba(15,23,42,.05)}
+.promoTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.promoTitle{font-weight:900;line-height:1.2}
+.promoBadge{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:950;white-space:nowrap}
+.promoDesc{font-size:13px;color:#4b5563;margin-top:6px;line-height:1.35}
+.promoMeta{font-size:12px;color:#6b7280;margin-top:8px}
+.promoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.promoActions a,.promoActions button{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:11px 12px;font-weight:850}
+.promoActions a{background:#111827;color:#fff}
+.promoActions button{background:#16a34a;color:#fff}
+.promoAdminHelp{padding:12px 16px;border-top:1px solid var(--line);font-size:12px;color:#6b7280;background:#f9fafb;line-height:1.35}
+@media(max-width:700px){.promoActions{grid-template-columns:1fr}.promoItem{border-radius:16px}.promoList{padding:12px}}
 
 </style>
 </head>
@@ -167,13 +161,6 @@ tr:hover td{background:#fafafa}
   </section>
 
   <div id="privacyNotice" class="notice hide">Listino salvato localmente su questo dispositivo. Puoi cancellarlo con il pulsante “Cancella dati locali”.</div>
-
-  
-
-<div id="promoAlert" class="promoAlert hide">
-  <div><b>È arrivata una nuova promo</b><span id="promoAlertText">Aprila dalla sezione Promo.</span></div>
-  <div style="display:flex;gap:8px"><button id="openPromoAlert">Apri</button><button id="closePromoAlert" class="closePromoAlert">Dopo</button></div>
-</div>
 
   <main class="grid">
     <section class="panel">
@@ -226,29 +213,14 @@ tr:hover td{background:#fafafa}
         <div class="actions"><button id="copyQuote">Copia testo</button><button class="whatsappBtn" id="sendWhatsApp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
       </section>
 
-
-      <section class="panel promoPanel">
+      <section class="panel promoCard">
         <div class="panelHead">
           <h2>Promo</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="secondary" id="refreshPromos">Aggiorna</button>
-            <button class="ghost" id="togglePromoAdmin">Admin</button>
-          </div>
+          <button class="ghost" id="refreshPromo" type="button">Aggiorna</button>
         </div>
-        <div class="promoBox">
-          <div class="promoTop"><div><b>Promozioni disponibili</b><p>Le promo scadute non vengono più mostrate dalla app.</p></div></div>
-          <div id="promoList" class="promoList"><div class="empty">Configura l’API promo per ricevere aggiornamenti.</div></div>
-        </div>
-        <div id="promoConfig" class="promoConfig hide">
-          <input id="promoApiUrl" placeholder="URL API Cloudflare Worker, es. https://promo.nome.workers.dev">
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px"><input id="promoAdminPassword" type="password" placeholder="Password admin"><button id="savePromoConfig" type="button">Salva</button></div>
-          <hr style="width:100%;border:0;border-top:1px solid var(--line)">
-          <input id="promoTitle" placeholder="Titolo promo">
-          <textarea id="promoDescription" placeholder="Descrizione breve"></textarea>
-          <div class="promoConfigGrid"><input id="promoExpires" type="date" aria-label="Data scadenza"><input id="promoFile" type="file" accept="application/pdf,image/png,image/jpeg,.jpg,.jpeg,.png,.pdf"></div>
-          <button id="uploadPromo" type="button">Carica nuova promo</button>
-          <div id="promoAdminStatus" class="small">I file promo vengono salvati nello storage Cloudflare, non su GitHub.</div>
-        </div>
+        <div class="promoIntro">Promozioni caricate dalla cartella <b>promo/</b> della repo GitHub. Le promo scadute non vengono mostrate.</div>
+        <div id="promoList" class="promoList"><div class="empty">Caricamento promo...</div></div>
+        <div class="promoAdminHelp">Per aggiungere o togliere promo: carica PDF/JPG/PNG nella cartella <b>promo/</b> e aggiorna il file <b>promo/promo.json</b>. Nessuna carta, nessun Cloudflare.</div>
       </section>
 
     </aside>
@@ -500,6 +472,60 @@ document.getElementById('pdfPrev').onclick=()=>renderPdfPage(currentPdfPage-1);
 document.getElementById('pdfNext').onclick=()=>renderPdfPage(currentPdfPage+1);
 els.pdfPageInput.onchange=()=>renderPdfPage(els.pdfPageInput.value);
 window.addEventListener('resize',()=>{if(!els.pdfViewer.classList.contains('hide')&&pdfDoc)renderPdfPage(currentPdfPage);});
+
+
+// PROMO STATICHE DA GITHUB - legge promo/promo.json
+async function loadPromo(){
+  const box=document.getElementById('promoList');
+  if(!box) return;
+  try{
+    const res=await fetch('./promo/promo.json?ts='+Date.now(),{cache:'no-store'});
+    if(!res.ok) throw new Error('promo.json non trovato');
+    const promos=await res.json();
+    const today=new Date(); today.setHours(0,0,0,0);
+    const active=(Array.isArray(promos)?promos:[])
+      .filter(p=>!p.expiry || new Date(p.expiry+'T23:59:59')>=today)
+      .sort((a,b)=>(a.expiry||'9999-12-31').localeCompare(b.expiry||'9999-12-31'));
+    if(!active.length){box.innerHTML='<div class="empty">Nessuna promo attiva.</div>';return;}
+    const seenKey='listino_promo_seen_ids_v1';
+    const seen=JSON.parse(localStorage.getItem(seenKey)||'[]');
+    const newPromos=active.filter(p=>p.id && !seen.includes(p.id));
+    box.innerHTML=active.map(p=>{
+      const id=escapeAttr(p.id||p.title||p.url);
+      const isNew=p.id && !seen.includes(p.id);
+      const url=escapeAttr(p.url||'#');
+      const title=escapeHtml(p.title||'Promo');
+      const desc=p.description?`<div class="promoDesc">${escapeHtml(p.description)}</div>`:'';
+      const expiry=p.expiry?`Scade: ${escapeHtml(p.expiry)}`:'Nessuna scadenza indicata';
+      return `<div class="promoItem" data-promo-id="${id}">
+        <div class="promoTop"><div class="promoTitle">${title}</div>${isNew?'<span class="promoBadge">NUOVA</span>':''}</div>
+        ${desc}
+        <div class="promoMeta">${expiry}</div>
+        <div class="promoActions">
+          <a href="${url}" target="_blank" rel="noopener">Apri promo</a>
+          <button type="button" data-wa-promo="${id}" data-url="${url}" data-title="${escapeAttr(p.title||'Promo')}">WhatsApp</button>
+        </div>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-wa-promo]').forEach(btn=>{
+      btn.onclick=()=>{
+        const abs=new URL(btn.dataset.url, location.href).href;
+        const text=`Promo: ${btn.dataset.title}\n${abs}`;
+        window.location.href='https://wa.me/?text='+encodeURIComponent(text);
+      };
+    });
+    if(newPromos.length){
+      setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);
+      localStorage.setItem(seenKey,JSON.stringify([...new Set([...seen,...newPromos.map(p=>p.id)])]));
+      setTimeout(loadPromo,500);
+    }
+  }catch(err){
+    console.warn(err);
+    box.innerHTML='<div class="empty">Nessuna promo caricata. Crea la cartella promo/ con promo.json.</div>';
+  }
+}
+document.getElementById('refreshPromo')?.addEventListener('click',loadPromo);
+
 function sendWhatsApp(){
   const text=quoteText();
   if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;}
@@ -534,76 +560,9 @@ document.getElementById('acceptLegal').onclick=()=>{
   els.legalModal.classList.add('hide');
 };
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
-
-
-/* Promo Cloud: configurare PROMO_API_URL dal pannello Admin */
-const promoEls={
-  list:document.getElementById('promoList'),config:document.getElementById('promoConfig'),api:document.getElementById('promoApiUrl'),pass:document.getElementById('promoAdminPassword'),title:document.getElementById('promoTitle'),desc:document.getElementById('promoDescription'),expires:document.getElementById('promoExpires'),file:document.getElementById('promoFile'),status:document.getElementById('promoAdminStatus'),alert:document.getElementById('promoAlert'),alertText:document.getElementById('promoAlertText')
-};
-let activePromos=[];
-function promoApi(){return (localStorage.getItem('promo_api_url')||'').replace(/\/$/,'');}
-function promoPass(){return localStorage.getItem('promo_admin_password')||'';}
-function fmtDate(d){try{return new Date(d+'T12:00:00').toLocaleDateString('it-IT')}catch(e){return d||'-'}}
-function safeUrl(path){const api=promoApi();return api?api+path:'#'}
-function renderPromos(items){
-  activePromos=items||[];
-  if(!promoEls.list)return;
-  if(!promoApi()){promoEls.list.innerHTML='<div class="empty">Apri Admin e inserisci URL API Cloudflare Worker.</div>';return;}
-  if(!activePromos.length){promoEls.list.innerHTML='<div class="empty">Nessuna promo attiva.</div>';return;}
-  promoEls.list.innerHTML=activePromos.map(p=>`<article class="promoCard">
-    <div class="promoMeta"><span class="promoBadge">Promo</span><span class="promoBadge expire">Scade ${fmtDate(p.expiresAt)}</span></div>
-    <h3>${escapeHtml(p.title||'Promo')}</h3>
-    <p>${escapeHtml(p.description||'')}</p>
-    <div class="promoActions"><a href="${safeUrl('/api/promos/'+encodeURIComponent(p.id)+'/file')}" target="_blank" rel="noopener">Apri promo</a><button type="button" data-copy-promo="${escapeAttr(p.id)}">Copia link</button></div>
-  </article>`).join('');
-  promoEls.list.querySelectorAll('[data-copy-promo]').forEach(b=>b.onclick=async()=>{await navigator.clipboard.writeText(safeUrl('/api/promos/'+encodeURIComponent(b.dataset.copyPromo)+'/file'));alert('Link promo copiato');});
-}
-async function loadPromos(showAlert=true){
-  const api=promoApi();
-  if(!api){renderPromos([]);return;}
-  try{
-    const res=await fetch(api+'/api/promos?ts='+Date.now(),{cache:'no-store'});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    const items=data.promos||[];
-    renderPromos(items);
-    const newest=items[0];
-    const seen=localStorage.getItem('promo_last_seen_id');
-    if(showAlert && newest && newest.id!==seen){
-      promoEls.alertText.textContent=newest.title||'Aprila dalla sezione Promo.';
-      promoEls.alert.classList.remove('hide');
-      document.getElementById('openPromoAlert').onclick=()=>{localStorage.setItem('promo_last_seen_id',newest.id);promoEls.alert.classList.add('hide');document.querySelector('.promoPanel')?.scrollIntoView({behavior:'smooth',block:'center'});};
-      document.getElementById('closePromoAlert').onclick=()=>{localStorage.setItem('promo_last_seen_id',newest.id);promoEls.alert.classList.add('hide');};
-    }
-  }catch(e){
-    console.warn(e); if(promoEls.list) promoEls.list.innerHTML='<div class="empty">Promo non raggiungibili. Controlla URL API o connessione.</div>';
-  }
-}
-document.getElementById('togglePromoAdmin')?.addEventListener('click',()=>{promoEls.config.classList.toggle('hide'); promoEls.api.value=promoApi(); promoEls.pass.value=promoPass();});
-document.getElementById('savePromoConfig')?.addEventListener('click',()=>{localStorage.setItem('promo_api_url',promoEls.api.value.trim().replace(/\/$/,''));localStorage.setItem('promo_admin_password',promoEls.pass.value);promoEls.status.textContent='Configurazione promo salvata su questo dispositivo.';loadPromos(false);});
-document.getElementById('refreshPromos')?.addEventListener('click',()=>loadPromos(false));
-document.getElementById('uploadPromo')?.addEventListener('click',async()=>{
-  const api=promoApi(),pass=promoPass(),file=promoEls.file.files[0];
-  if(!api){alert('Inserisci e salva prima URL API.');return;}
-  if(!pass){alert('Inserisci e salva la password admin.');return;}
-  if(!promoEls.title.value.trim()){alert('Inserisci il titolo promo.');return;}
-  if(!promoEls.expires.value){alert('Inserisci la data di scadenza.');return;}
-  if(!file){alert('Seleziona un file PDF/JPG/PNG.');return;}
-  const fd=new FormData(); fd.append('title',promoEls.title.value.trim()); fd.append('description',promoEls.desc.value.trim()); fd.append('expiresAt',promoEls.expires.value); fd.append('file',file);
-  promoEls.status.textContent='Caricamento promo in corso...';
-  try{
-    const res=await fetch(api+'/api/admin/promos',{method:'POST',headers:{'x-admin-password':pass},body:fd});
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok)throw new Error(data.error||'Errore caricamento');
-    promoEls.status.textContent='Promo caricata correttamente.'; promoEls.title.value=''; promoEls.desc.value=''; promoEls.expires.value=''; promoEls.file.value='';
-    await loadPromos(false);
-  }catch(e){promoEls.status.textContent='Errore: '+e.message;}
-});
-loadPromos(true);
-setInterval(()=>loadPromos(true),10*60*1000);
-
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
 updatePdfStatus();
+loadPromo();
 load();
 </script>
 </body>
