@@ -1,16 +1,22 @@
 [
   {
-    "id": "prevendita-b-300-042026",
-    "title": "Prevendita esclusiva B 300",
-    "description": "Cod. 01101027 - Equilibratrice elettronica 230V 1ph 50 Hz. Quantità limitate in prevendita.",
-    "url": "promo/prevendita-b-300.pdf",
-    "expiry": "2026-06-30"
+    "id": "b300-042026",
+    "title": "Prevendita B 300",
+    "description": "Promo prevendita esclusiva B 300 - quantità limitate.",
+    "url": "promo/prevendita-b300.pdf",
+    "type": "pdf",
+    "expiresAt": "2026-06-30",
+    "active": true,
+    "createdAt": "2026-04-29"
   },
   {
-    "id": "prevendita-b224-helper-b300-042026",
-    "title": "Prevendita B 224 + HELPER B + B 300",
-    "description": "Pacchetto completo in prevendita. Consegne da Giugno 2026.",
-    "url": "promo/prevendita-b-224-helper-b-300.pdf",
-    "expiry": "2026-06-30"
+    "id": "b224-helper-b300-042026",
+    "title": "B 224 + Helper B + B 300",
+    "description": "Promo combinata prevendita esclusiva con consegne da giugno 2026.",
+    "url": "promo/prevendita-b224-helper-b300.pdf",
+    "type": "pdf",
+    "expiresAt": "2026-06-30",
+    "active": true,
+    "createdAt": "2026-04-29"
   }
 ]
