@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Promo - Configuratore Listino PRO</title>
+<style>
+:root{--bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--danger:#991b1b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.app{max-width:980px;margin:0 auto;padding:18px}.hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:26px;padding:24px;margin-bottom:18px}.hero h1{margin:0;font-size:clamp(28px,4vw,44px)}.hero p{color:#e5e7eb;line-height:1.45}.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden;margin-bottom:16px}.head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center}h2{margin:0;font-size:18px}.body{padding:16px;display:grid;gap:12px}button{border:0;border-radius:14px;background:var(--brand);color:#fff;padding:11px 14px;font-weight:800;cursor:pointer}button.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}input,textarea{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px;font:inherit}.row{border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}.small{font-size:13px;color:var(--muted);line-height:1.45}.hide{display:none!important}.notice{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:16px;padding:12px}.ok{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:12px}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:12px;white-space:pre-wrap;max-height:260px;overflow:auto}@media(max-width:680px){.grid{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}.actions{display:grid}.actions button{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section class="hero">
+    <h1>Admin Promo</h1>
+    <p>Gestione senza Cloudflare: modifichi data validità, disattivi o cancelli una promo, poi scarichi il nuovo <b>promo.json</b> e lo carichi su GitHub nella cartella <b>promo/</b>.</p>
+  </section>
+  <section class="panel" id="loginPanel">
+    <div class="head"><h2>Accesso amministratore</h2></div>
+    <div class="body">
+      <input id="pass" type="password" placeholder="Password admin">
+      <button id="unlock">Entra</button>
+      <div class="small">Password predefinita: <b>admin</b>. Puoi cambiarla dentro questo file, ma su GitHub non è una protezione server reale.</div>
+    </div>
+  </section>
+  <section class="panel hide" id="adminPanel">
+    <div class="head"><h2>Promo nel file promo.json</h2><div class="actions"><button class="secondary" id="reload">Ricarica</button><button id="download">Scarica promo.json</button></div></div>
+    <div class="body">
+      <div class="notice"><b>Per cancellarla dalle app:</b> premi <b>Disattiva</b> o <b>Elimina</b>, poi scarica il file e sostituisci <b>promo/promo.json</b> su GitHub. Gli utenti vedranno l’aggiornamento riaprendo la PWA o premendo “Aggiorna”.</div>
+      <div id="rows"></div>
+      <div class="actions"><button id="add">Aggiungi riga promo</button><button class="secondary" id="copy">Copia JSON</button></div>
+      <div class="small">Nota: se vuoi rimuovere anche il file PDF/JPG fisico, cancellalo dalla cartella <b>promo/</b> su GitHub. Se basta non mostrarlo più, è sufficiente disattivarlo o eliminarlo dal JSON.</div>
+      <div id="jsonPreview" class="code"></div>
+    </div>
+  </section>
+</div>
+<script>
+const ADMIN_PASSWORD='admin';
+let promos=[];
+const $=id=>document.getElementById(id);
+function today(){return new Date().toISOString().slice(0,10)}
+function esc(s){return String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
+async function load(){
+  try{const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});promos=await r.json();if(!Array.isArray(promos))promos=[]}catch(e){promos=[];alert('Non riesco a leggere promo/promo.json. Puoi comunque creare un nuovo JSON.')}
+  render();
+}
+function normalize(p){return {id:p.id||('promo-'+Date.now()),title:p.title||'',description:p.description||'',url:p.url||'',type:p.type||((p.url||'').toLowerCase().endsWith('.pdf')?'pdf':'image'),expiresAt:p.expiresAt||p.expiry||'',active:p.active!==false,createdAt:p.createdAt||today()}}
+function currentJson(){return JSON.stringify(promos.map(normalize),null,2)}
+function render(){
+  $('rows').innerHTML=promos.map((p,i)=>`<div class="row">
+    <div class="grid"><label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label><label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt||p.expiry)}"></label></div>
+    <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
+    <div class="grid"><label>File / URL<input data-i="${i}" data-f="url" value="${esc(p.url)}"></label><label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label></div>
+    <div class="small">Stato: <b>${p.active===false?'DISATTIVATA':'ATTIVA'}</b></div>
+    <div class="actions"><button data-save="${i}">Salva riga</button><button class="danger" data-toggle="${i}">${p.active===false?'Riattiva':'Disattiva'}</button><button class="danger" data-del="${i}">Elimina dal JSON</button></div>
+  </div>`).join('') || '<div class="small">Nessuna promo presente.</div>';
+  document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save;document.querySelectorAll(`[data-i="${i}"]`).forEach(inp=>promos[i][inp.dataset.f]=inp.value.trim());if(promos[i].active!==false)promos[i].active=true;render()});
+  document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{const i=+b.dataset.toggle;promos[i].active=promos[i].active===false;render()});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const i=+b.dataset.del;if(confirm('Eliminare questa promo dal JSON?')){promos.splice(i,1);render()}});
+  $('jsonPreview').textContent=currentJson();
+}
+function downloadJson(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([currentJson()],{type:'application/json'}));a.download='promo.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');load()};
+$('reload').onclick=load;$('download').onclick=downloadJson;$('copy').onclick=async()=>{await navigator.clipboard.writeText(currentJson());alert('JSON copiato')};
+$('add').onclick=()=>{promos.push({id:'promo-'+Date.now(),title:'Nuova promo',description:'',url:'promo/nuova-promo.pdf',type:'pdf',expiresAt:today(),active:true,createdAt:today()});render()};
+</script>
+</body>
+</html>

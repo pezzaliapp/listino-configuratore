@@ -109,25 +109,6 @@ tr:hover td{background:#fafafa}
 .mobileQtyRow{display:grid;grid-template-columns:80px 1fr;gap:8px;margin-top:10px}
 .mobileQtyRow input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
 @media(max-width:700px){.pdfTools{display:none!important}.pageBtn,.mobilePageBtn{display:none!important}td[data-label="Pagina"],td:nth-child(4),th:nth-child(4){display:none!important}.mobileMeta{grid-template-columns:1fr}.mobileActions{grid-template-columns:1fr}}
-
-
-/* PROMO STATICHE DA GITHUB - ZERO CLOUDFLARE */
-.promoCard{padding:0}
-.promoIntro{padding:14px 16px;border-bottom:1px solid var(--line);color:#6b7280;font-size:13px;line-height:1.35}
-.promoList{display:grid;gap:10px;padding:14px 16px}
-.promoItem{border:1px solid var(--line);border-radius:18px;padding:13px;background:#fff;box-shadow:0 6px 16px rgba(15,23,42,.05)}
-.promoTop{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
-.promoTitle{font-weight:900;line-height:1.2}
-.promoBadge{background:#dcfce7;color:#166534;border:1px solid #bbf7d0;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:950;white-space:nowrap}
-.promoDesc{font-size:13px;color:#4b5563;margin-top:6px;line-height:1.35}
-.promoMeta{font-size:12px;color:#6b7280;margin-top:8px}
-.promoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-.promoActions a,.promoActions button{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:11px 12px;font-weight:850}
-.promoActions a{background:#111827;color:#fff}
-.promoActions button{background:#16a34a;color:#fff}
-.promoAdminHelp{padding:12px 16px;border-top:1px solid var(--line);font-size:12px;color:#6b7280;background:#f9fafb;line-height:1.35}
-@media(max-width:700px){.promoActions{grid-template-columns:1fr}.promoItem{border-radius:16px}.promoList{padding:12px}}
-
 </style>
 </head>
 <body>
@@ -212,17 +193,7 @@ tr:hover td{background:#fafafa}
         </div>
         <div class="actions"><button id="copyQuote">Copia testo</button><button class="whatsappBtn" id="sendWhatsApp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
       </section>
-
-      <section class="panel promoCard">
-        <div class="panelHead">
-          <h2>Promo</h2>
-          <button class="ghost" id="refreshPromo" type="button">Aggiorna</button>
-        </div>
-        <div class="promoIntro">Promozioni caricate dalla cartella <b>promo/</b> della repo GitHub. Le promo scadute non vengono mostrate.</div>
-        <div id="promoList" class="promoList"><div class="empty">Caricamento promo...</div></div>
-        <div class="promoAdminHelp">Per aggiungere o togliere promo: carica PDF/JPG/PNG nella cartella <b>promo/</b> e aggiorna il file <b>promo/promo.json</b>. Nessuna carta, nessun Cloudflare.</div>
-      </section>
-
+    <section class="panel"><div class="panelHead"><h2>Admin Promo</h2></div><div style="padding:14px 16px;display:grid;gap:10px"><div class="small">Gestisci validità e cancellazione promo senza Cloudflare.</div><a href="admin-promo.html"><button class="secondary" style="width:100%">Apri Admin Promo</button></a></div></section>
     </aside>
   </main>
 </div>
@@ -472,60 +443,6 @@ document.getElementById('pdfPrev').onclick=()=>renderPdfPage(currentPdfPage-1);
 document.getElementById('pdfNext').onclick=()=>renderPdfPage(currentPdfPage+1);
 els.pdfPageInput.onchange=()=>renderPdfPage(els.pdfPageInput.value);
 window.addEventListener('resize',()=>{if(!els.pdfViewer.classList.contains('hide')&&pdfDoc)renderPdfPage(currentPdfPage);});
-
-
-// PROMO STATICHE DA GITHUB - legge promo/promo.json
-async function loadPromo(){
-  const box=document.getElementById('promoList');
-  if(!box) return;
-  try{
-    const res=await fetch('./promo/promo.json?ts='+Date.now(),{cache:'no-store'});
-    if(!res.ok) throw new Error('promo.json non trovato');
-    const promos=await res.json();
-    const today=new Date(); today.setHours(0,0,0,0);
-    const active=(Array.isArray(promos)?promos:[])
-      .filter(p=>!p.expiry || new Date(p.expiry+'T23:59:59')>=today)
-      .sort((a,b)=>(a.expiry||'9999-12-31').localeCompare(b.expiry||'9999-12-31'));
-    if(!active.length){box.innerHTML='<div class="empty">Nessuna promo attiva.</div>';return;}
-    const seenKey='listino_promo_seen_ids_v1';
-    const seen=JSON.parse(localStorage.getItem(seenKey)||'[]');
-    const newPromos=active.filter(p=>p.id && !seen.includes(p.id));
-    box.innerHTML=active.map(p=>{
-      const id=escapeAttr(p.id||p.title||p.url);
-      const isNew=p.id && !seen.includes(p.id);
-      const url=escapeAttr(p.url||'#');
-      const title=escapeHtml(p.title||'Promo');
-      const desc=p.description?`<div class="promoDesc">${escapeHtml(p.description)}</div>`:'';
-      const expiry=p.expiry?`Scade: ${escapeHtml(p.expiry)}`:'Nessuna scadenza indicata';
-      return `<div class="promoItem" data-promo-id="${id}">
-        <div class="promoTop"><div class="promoTitle">${title}</div>${isNew?'<span class="promoBadge">NUOVA</span>':''}</div>
-        ${desc}
-        <div class="promoMeta">${expiry}</div>
-        <div class="promoActions">
-          <a href="${url}" target="_blank" rel="noopener">Apri promo</a>
-          <button type="button" data-wa-promo="${id}" data-url="${url}" data-title="${escapeAttr(p.title||'Promo')}">WhatsApp</button>
-        </div>
-      </div>`;
-    }).join('');
-    box.querySelectorAll('[data-wa-promo]').forEach(btn=>{
-      btn.onclick=()=>{
-        const abs=new URL(btn.dataset.url, location.href).href;
-        const text=`Promo: ${btn.dataset.title}\n${abs}`;
-        window.location.href='https://wa.me/?text='+encodeURIComponent(text);
-      };
-    });
-    if(newPromos.length){
-      setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);
-      localStorage.setItem(seenKey,JSON.stringify([...new Set([...seen,...newPromos.map(p=>p.id)])]));
-      setTimeout(loadPromo,500);
-    }
-  }catch(err){
-    console.warn(err);
-    box.innerHTML='<div class="empty">Nessuna promo caricata. Crea la cartella promo/ con promo.json.</div>';
-  }
-}
-document.getElementById('refreshPromo')?.addEventListener('click',loadPromo);
-
 function sendWhatsApp(){
   const text=quoteText();
   if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;}
@@ -562,7 +479,6 @@ document.getElementById('acceptLegal').onclick=()=>{
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
 updatePdfStatus();
-loadPromo();
 load();
 </script>
 </body>
