@@ -109,6 +109,24 @@ tr:hover td{background:#fafafa}
 .mobileQtyRow{display:grid;grid-template-columns:80px 1fr;gap:8px;margin-top:10px}
 .mobileQtyRow input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
 @media(max-width:700px){.pdfTools{display:none!important}.pageBtn,.mobilePageBtn{display:none!important}td[data-label="Pagina"],td:nth-child(4),th:nth-child(4){display:none!important}.mobileMeta{grid-template-columns:1fr}.mobileActions{grid-template-columns:1fr}}
+
+/* Promo senza Cloudflare */
+.promoIntro{padding:14px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.4}
+.promoList{padding:14px 16px;display:grid;gap:12px}
+.promoCard{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px;box-shadow:0 8px 18px rgba(15,23,42,.05)}
+.promoCardHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px}
+.promoTitle{font-weight:950;font-size:16px;line-height:1.2}
+.promoBadges{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.promoBadge{font-size:11px;font-weight:900;border-radius:999px;padding:5px 8px;background:#eef2ff;color:#1d4ed8;border:1px solid #c7d2fe;white-space:nowrap}
+.promoBadge.hot{background:#fff7ed;color:#c2410c;border-color:#fed7aa}.promoBadge.new{background:#ecfdf5;color:#166534;border-color:#bbf7d0}
+.promoDesc{font-size:13px;color:#374151;line-height:1.35;margin:8px 0}
+.promoDates{font-size:12px;color:var(--muted);display:grid;gap:3px;margin:8px 0 12px}
+.promoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.promoActions button,.promoActions a{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:11px 12px;font-weight:900}
+.promoActions a{background:#111827;color:#fff}.promoActions .wa{background:#16a34a;color:#fff;border:0}
+.promoEmpty{padding:24px;text-align:center;color:var(--muted);font-size:14px;line-height:1.4}
+@media(max-width:700px){.promoActions{grid-template-columns:1fr}.promoCard{padding:13px}.promoCardHead{display:block}.promoBadges{justify-content:flex-start;margin-top:8px}}
+
 </style>
 </head>
 <body>
@@ -193,7 +211,13 @@ tr:hover td{background:#fafafa}
         </div>
         <div class="actions"><button id="copyQuote">Copia testo</button><button class="whatsappBtn" id="sendWhatsApp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
       </section>
-    <section class="panel"><div class="panelHead"><h2>Admin Promo</h2></div><div style="padding:14px 16px;display:grid;gap:10px"><div class="small">Gestisci validità e cancellazione promo senza Cloudflare.</div><a href="admin-promo.html"><button class="secondary" style="width:100%">Apri Admin Promo</button></a></div></section>
+      <section class="panel" id="promoPanel">
+        <div class="panelHead"><h2>Promo</h2><button class="ghost" id="promoRefresh" type="button">Aggiorna</button></div>
+        <div class="promoIntro">Promozioni caricate dalla cartella <b>promo/</b> della repo GitHub. Le promo non ancora iniziate, scadute o disattivate non vengono mostrate dalla app.</div>
+        <div id="promoList" class="promoList"><div class="promoEmpty">Caricamento promo...</div></div>
+      </section>
+
+      <section class="panel"><div class="panelHead"><h2>Admin Promo</h2></div><div style="padding:14px 16px;display:grid;gap:10px"><div class="small">Gestisci data inizio, validità e cancellazione promo senza Cloudflare.</div><a href="admin-promo.html"><button class="secondary" style="width:100%">Apri Admin Promo</button></a></div></section>
     </aside>
   </main>
 </div>
@@ -222,7 +246,7 @@ const els={
   chips:document.getElementById('chips'),kArt:document.getElementById('kArt'),kFam:document.getElementById('kFam'),kQuote:document.getElementById('kQuote'),
   quoteList:document.getElementById('quoteList'),discount:document.getElementById('discount'),markup:document.getElementById('markup'),
   gross:document.getElementById('gross'),discVal:document.getElementById('discVal'),markVal:document.getElementById('markVal'),net:document.getElementById('net'),
-  privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck'),pdfFile:document.getElementById('pdfFile'),pdfStatus:document.getElementById('pdfStatus'),pdfViewer:document.getElementById('pdfViewer'),pdfTitle:document.getElementById('pdfTitle'),pdfCanvas:document.getElementById('pdfCanvas'),pdfCanvasWrap:document.getElementById('pdfCanvasWrap'),pdfPageInput:document.getElementById('pdfPageInput'),pdfPageTotal:document.getElementById('pdfPageTotal'),mobileCards:document.getElementById('mobileCards')
+  privacyNotice:document.getElementById('privacyNotice'),legalModal:document.getElementById('legalModal'),legalCheck:document.getElementById('legalCheck'),pdfFile:document.getElementById('pdfFile'),pdfStatus:document.getElementById('pdfStatus'),promoList:document.getElementById('promoList'),promoRefresh:document.getElementById('promoRefresh'),pdfViewer:document.getElementById('pdfViewer'),pdfTitle:document.getElementById('pdfTitle'),pdfCanvas:document.getElementById('pdfCanvas'),pdfCanvasWrap:document.getElementById('pdfCanvasWrap'),pdfPageInput:document.getElementById('pdfPageInput'),pdfPageTotal:document.getElementById('pdfPageTotal'),mobileCards:document.getElementById('mobileCards')
 };
 let rows=[],filtered=[],quote=[];
 let pdfDoc=null,currentPdfPage=1,pdfName='Listino PDF';
@@ -393,6 +417,47 @@ function download(name,text){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
 
+function parsePromoDate(value, endOfDay=false){
+  if(!value) return null;
+  const m=String(value).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m){const d=new Date(value);return isNaN(d)?null:d;}
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), endOfDay?23:0, endOfDay?59:0, endOfDay?59:0, endOfDay?999:0);
+}
+function promoStart(p){return p.startsAt || p.start || p.validFrom || '';}
+function promoExpiry(p){return p.expiresAt || p.expiry || p.validUntil || '';}
+function promoId(p){return p.id || p.url || p.title;}
+function isPromoVisible(p){
+  if(p.active===false) return false;
+  const now=new Date();
+  const start=parsePromoDate(promoStart(p), false);
+  const expiry=parsePromoDate(promoExpiry(p), true);
+  if(start && start>now) return false;
+  if(expiry && expiry<now) return false;
+  return true;
+}
+function daysToExpiry(p){const exp=parsePromoDate(promoExpiry(p), true);if(!exp) return null;return Math.ceil((exp-new Date())/(1000*60*60*24));}
+function promoUrl(p){return p.url || '#';}
+function promoWhatsAppText(p){const link=new URL(promoUrl(p), location.href).href;return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\n${link}`;}
+function renderPromos(promos){
+  if(!els.promoList) return;
+  const visible=(Array.isArray(promos)?promos:[]).filter(isPromoVisible);
+  if(!visible.length){els.promoList.innerHTML='<div class="promoEmpty">Nessuna promo attiva disponibile.</div>';return;}
+  const seen=JSON.parse(localStorage.getItem('listino_promo_seen_ids')||'[]');
+  els.promoList.innerHTML=visible.map(p=>{
+    const id=promoId(p);const d=daysToExpiry(p);const isNew=!seen.includes(id);const badges=[];
+    if(isNew) badges.push('<span class="promoBadge new">NUOVA</span>');
+    if(d!==null && d<=7) badges.push(`<span class="promoBadge hot">Scade tra ${Math.max(0,d)} gg</span>`);
+    return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><a href="${escapeAttr(promoUrl(p))}" target="_blank" rel="noopener">Apri promo</a><button class="wa" type="button" data-promo-wa="${escapeAttr(id)}">WhatsApp</button></div></article>`;
+  }).join('');
+  els.promoList.querySelectorAll('[data-promo-wa]').forEach(btn=>btn.onclick=()=>{const p=visible.find(x=>promoId(x)===btn.dataset.promoWa);if(p) location.href='https://wa.me/?text='+encodeURIComponent(promoWhatsAppText(p));});
+  const newIds=visible.map(promoId).filter(id=>!seen.includes(id));
+  if(newIds.length){setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);localStorage.setItem('listino_promo_seen_ids', JSON.stringify([...new Set([...seen, ...visible.map(promoId)])]));}
+}
+async function loadPromos(){
+  if(!els.promoList) return;
+  try{els.promoList.innerHTML='<div class="promoEmpty">Caricamento promo...</div>';const res=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});if(!res.ok) throw new Error('promo.json non trovato');const data=await res.json();renderPromos(data);}catch(e){console.warn(e);els.promoList.innerHTML='<div class="promoEmpty">Non riesco a leggere <b>promo/promo.json</b>. Verifica che il file sia presente nella repo.</div>';}
+}
+
 async function updatePdfStatus(){
   try{const saved=await idbGet('listino_pdf'); if(saved){pdfName=saved.name||'Listino PDF'; els.pdfStatus.textContent=`PDF caricato: ${pdfName}. Tocca una pagina del listino per aprirla.`;}}
   catch(e){console.warn(e)}
@@ -471,6 +536,7 @@ document.getElementById('emptyQuote').onclick=()=>{quote=[];save();renderQuote()
 document.getElementById('copyQuote').onclick=async()=>{await navigator.clipboard.writeText(quoteText());alert('Testo preventivo copiato');};
 document.getElementById('exportCsv').onclick=exportQuoteCsv;
 document.getElementById('sendWhatsApp').onclick=sendWhatsApp;
+if(els.promoRefresh) els.promoRefresh.onclick=loadPromos;
 document.getElementById('acceptLegal').onclick=()=>{
   if(!els.legalCheck.checked){alert('Devi confermare la presa visione per continuare.');return;}
   localStorage.setItem('listino_configuratore_legal_ok','true');
@@ -479,6 +545,7 @@ document.getElementById('acceptLegal').onclick=()=>{
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
 updatePdfStatus();
+loadPromos();
 load();
 </script>
 </body>

@@ -13,7 +13,7 @@
 <div class="app">
   <section class="hero">
     <h1>Admin Promo</h1>
-    <p>Gestione senza Cloudflare: modifichi data validità, disattivi o cancelli una promo, poi scarichi il nuovo <b>promo.json</b> e lo carichi su GitHub nella cartella <b>promo/</b>.</p>
+    <p>Gestione senza Cloudflare: modifichi data inizio, data scadenza, disattivi o cancelli una promo, poi scarichi il nuovo <b>promo.json</b> e lo carichi su GitHub nella cartella <b>promo/</b>.</p>
   </section>
   <section class="panel" id="loginPanel">
     <div class="head"><h2>Accesso amministratore</h2></div>
@@ -27,6 +27,7 @@
     <div class="head"><h2>Promo nel file promo.json</h2><div class="actions"><button class="secondary" id="reload">Ricarica</button><button id="download">Scarica promo.json</button></div></div>
     <div class="body">
       <div class="notice"><b>Per cancellarla dalle app:</b> premi <b>Disattiva</b> o <b>Elimina</b>, poi scarica il file e sostituisci <b>promo/promo.json</b> su GitHub. Gli utenti vedranno l’aggiornamento riaprendo la PWA o premendo “Aggiorna”.</div>
+      <div class="ok"><b>Data inizio:</b> la promo non appare prima di questa data. <b>Scadenza:</b> dopo questa data non viene più mostrata.</div>
       <div id="rows"></div>
       <div class="actions"><button id="add">Aggiungi riga promo</button><button class="secondary" id="copy">Copia JSON</button></div>
       <div class="small">Nota: se vuoi rimuovere anche il file PDF/JPG fisico, cancellalo dalla cartella <b>promo/</b> su GitHub. Se basta non mostrarlo più, è sufficiente disattivarlo o eliminarlo dal JSON.</div>
@@ -44,11 +45,12 @@ async function load(){
   try{const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});promos=await r.json();if(!Array.isArray(promos))promos=[]}catch(e){promos=[];alert('Non riesco a leggere promo/promo.json. Puoi comunque creare un nuovo JSON.')}
   render();
 }
-function normalize(p){return {id:p.id||('promo-'+Date.now()),title:p.title||'',description:p.description||'',url:p.url||'',type:p.type||((p.url||'').toLowerCase().endsWith('.pdf')?'pdf':'image'),expiresAt:p.expiresAt||p.expiry||'',active:p.active!==false,createdAt:p.createdAt||today()}}
+function normalize(p){return {id:p.id||('promo-'+Date.now()),title:p.title||'',description:p.description||'',url:p.url||'',type:p.type||((p.url||'').toLowerCase().endsWith('.pdf')?'pdf':'image'),startsAt:p.startsAt||p.start||'',expiresAt:p.expiresAt||p.expiry||'',active:p.active!==false,createdAt:p.createdAt||today()}}
 function currentJson(){return JSON.stringify(promos.map(normalize),null,2)}
 function render(){
   $('rows').innerHTML=promos.map((p,i)=>`<div class="row">
-    <div class="grid"><label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label><label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt||p.expiry)}"></label></div>
+    <div class="grid"><label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label><label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt||p.start)}"></label></div>
+    <div class="grid"><label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt||p.expiry)}"></label><label>Tipo<input data-i="${i}" data-f="type" value="${esc(p.type||'pdf')}"></label></div>
     <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
     <div class="grid"><label>File / URL<input data-i="${i}" data-f="url" value="${esc(p.url)}"></label><label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label></div>
     <div class="small">Stato: <b>${p.active===false?'DISATTIVATA':'ATTIVA'}</b></div>
@@ -62,7 +64,7 @@ function render(){
 function downloadJson(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([currentJson()],{type:'application/json'}));a.download='promo.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 $('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');load()};
 $('reload').onclick=load;$('download').onclick=downloadJson;$('copy').onclick=async()=>{await navigator.clipboard.writeText(currentJson());alert('JSON copiato')};
-$('add').onclick=()=>{promos.push({id:'promo-'+Date.now(),title:'Nuova promo',description:'',url:'promo/nuova-promo.pdf',type:'pdf',expiresAt:today(),active:true,createdAt:today()});render()};
+$('add').onclick=()=>{promos.push({id:'promo-'+Date.now(),title:'Nuova promo',description:'',url:'promo/nuova-promo.pdf',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()});render()};
 </script>
 </body>
 </html>
