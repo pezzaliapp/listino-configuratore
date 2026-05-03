@@ -32,6 +32,10 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
 .row input:not([type="file"]):hover:not(:disabled),.row textarea:hover:not(:disabled),.row select:hover:not(:disabled){border-color:#9ca3af}
 .row input:not([type="file"]):focus,.row textarea:focus,.row select:focus{border-color:#2E75B6;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(46,117,182,.15)}
 @media(max-width:680px){.row{padding:16px;gap:12px}.row input:not([type="file"]),.row textarea,.row select{min-height:44px}}
+.row label{display:block}
+.row .lbl{display:block;font-weight:600;color:#1f2a44;font-size:13px;margin-bottom:6px}
+.row .lbl .req{color:#dc2626;margin-left:2px;font-weight:700}
+.row .hint{display:block;font-size:12px;color:#6b7280;margin-top:4px;line-height:1.4}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .small{font-size:13px;color:var(--muted);line-height:1.45}
@@ -620,25 +624,24 @@ function render(){
     const urlBlock = urlReadOnly
       ? `<input data-i="${i}" data-f="url" value="${esc(urlValue)}" disabled style="background:#f3f4f6;color:#9ca3af">`
       : `<input data-i="${i}" data-f="url" value="${esc(p.url)}" placeholder="es. promo/file.pdf oppure https://...">`;
+    const urlLabelText = dataUri ? 'URL (data: legacy, gestito)' : isManagedFile ? 'Path file su GitHub (gestito)' : 'File / URL / path';
     return `<div class="row">
       <div class="grid">
-        <label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label>
-        <label>Tipo
-          <select data-i="${i}" data-f="type">
+        <label><span class="lbl">Titolo<span class="req">*</span></span><input data-i="${i}" data-f="title" value="${esc(p.title)}"><span class="hint">es. Prevendita B 300 - Sconto 15% (max 80 caratteri consigliati)</span></label>
+        <label><span class="lbl">Tipo<span class="req">*</span></span><select data-i="${i}" data-f="type">
             <option value="pdf" ${p.type==='pdf'?'selected':''}>PDF</option>
             <option value="image" ${p.type==='image'?'selected':''}>Immagine</option>
-          </select>
-        </label>
+          </select></label>
       </div>
-      <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
+      <label><span class="lbl">Descrizione</span><textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea><span class="hint">Una o due frasi che spiegano la promo. Sarà visibile agli utenti.</span></label>
       ${fileBlock}
       <div class="grid">
-        <label>${dataUri?'URL (data: legacy, gestito)':isManagedFile?'Path file su GitHub (gestito)':'File / URL / path'}${urlBlock}</label>
-        <label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label>
+        <label><span class="lbl">${urlLabelText}</span>${urlBlock}<span class="hint">Compilato automaticamente quando carichi un file. Modifica solo se sai cosa stai facendo.</span></label>
+        <label><span class="lbl">ID</span><input data-i="${i}" data-f="id" value="${esc(p.id)}"><span class="hint">Identificatore univoco generato automaticamente. Non modificare.</span></label>
       </div>
       <div class="grid">
-        <label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"></label>
-        <label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"></label>
+        <label><span class="lbl">Data inizio<span class="req">*</span></span><input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"><span class="hint">La promo diventa visibile da questa data. Formato: GG/MM/AAAA</span></label>
+        <label><span class="lbl">Scadenza<span class="req">*</span></span><input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"><span class="hint">Dopo questa data la promo sparisce automaticamente. Formato: GG/MM/AAAA</span></label>
       </div>
       <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'} ${dataUri?' &middot; <span class="pill warn">embedded legacy</span>':isManagedFile?' &middot; <span class="pill embedded">file GitHub</span>':hasManualUrl?' &middot; <span class="pill url">URL/path esterno</span>':' &middot; <span class="pill warn">nessun file</span>'}</div>
       <div class="actions">
