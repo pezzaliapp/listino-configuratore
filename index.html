@@ -123,7 +123,7 @@ tr:hover td{background:#fafafa}
 .promoDates{font-size:12px;color:var(--muted);display:grid;gap:3px;margin:8px 0 12px}
 .promoActions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .promoActions button,.promoActions a{display:block;text-align:center;text-decoration:none;border-radius:14px;padding:11px 12px;font-weight:900}
-.promoActions a{background:#111827;color:#fff}.promoActions .wa{background:#16a34a;color:#fff;border:0}
+.promoActions a{background:#111827;color:#fff}.promoActions .open{background:#111827;color:#fff;border:0;cursor:pointer}.promoActions .wa{background:#16a34a;color:#fff;border:0;cursor:pointer}
 .promoEmpty{padding:24px;text-align:center;color:var(--muted);font-size:14px;line-height:1.4}
 @media(max-width:700px){.promoActions{grid-template-columns:1fr}.promoCard{padding:13px}.promoCardHead{display:block}.promoBadges{justify-content:flex-start;margin-top:8px}}
 
@@ -458,8 +458,32 @@ function renderPromos(promos){
     const id=promoId(p);const d=daysToExpiry(p);const isNew=!seen.includes(id);const badges=[];
     if(isNew) badges.push('<span class="promoBadge new">NUOVA</span>');
     if(d!==null && d<=7) badges.push(`<span class="promoBadge hot">Scade tra ${Math.max(0,d)} gg</span>`);
-    return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><a href="${escapeAttr(promoUrl(p))}" target="_blank" rel="noopener">Apri promo</a><button class="wa" type="button" data-promo-wa="${escapeAttr(id)}">WhatsApp</button></div></article>`;
+    return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><button class="open" type="button" data-promo-open="${escapeAttr(id)}">Apri promo</button><button class="wa" type="button" data-promo-wa="${escapeAttr(id)}">WhatsApp</button></div></article>`;
   }).join('');
+  // Apri promo: gestisce sia URL/path normali che data URI (i browser bloccano la navigazione diretta a data:, quindi convertiamo in Blob URL al volo).
+  els.promoList.querySelectorAll('[data-promo-open]').forEach(btn=>btn.onclick=async()=>{
+    const p=visible.find(x=>promoId(x)===btn.dataset.promoOpen);
+    if(!p) return;
+    const url=promoUrl(p);
+    if(!url||url==='#'){alert('Questa promo non ha un file associato.');return;}
+    try{
+      if(url.startsWith('data:')){
+        // converte data URI in Blob URL: i browser bloccano window.open su data:
+        const r=await fetch(url);
+        const blob=await r.blob();
+        const blobUrl=URL.createObjectURL(blob);
+        const w=window.open(blobUrl,'_blank','noopener');
+        if(!w){alert('Il browser ha bloccato l\'apertura. Consenti i popup per questo sito.');}
+        // libera memoria dopo un minuto, abbastanza per aprirla e visualizzarla
+        setTimeout(()=>URL.revokeObjectURL(blobUrl),60000);
+      }else{
+        window.open(url,'_blank','noopener');
+      }
+    }catch(e){
+      console.error(e);
+      alert('Errore nell\'apertura della promo: '+e.message);
+    }
+  });
   els.promoList.querySelectorAll('[data-promo-wa]').forEach(btn=>btn.onclick=()=>{const p=visible.find(x=>promoId(x)===btn.dataset.promoWa);if(p) location.href='https://wa.me/?text='+encodeURIComponent(promoWhatsAppText(p));});
   const newIds=visible.map(promoId).filter(id=>!seen.includes(id));
   if(newIds.length){setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);localStorage.setItem('listino_promo_seen_ids', JSON.stringify([...new Set([...seen, ...visible.map(promoId)])]));}

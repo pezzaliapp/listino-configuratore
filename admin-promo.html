@@ -47,6 +47,19 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
 .sizeBar>div{height:100%;background:#10b981;transition:width .3s,background .3s}
 .sizeBar.warn>div{background:#f59e0b}
 .sizeBar.danger>div{background:#ef4444}
+button.publish{background:#16a34a;color:#fff}
+button.publish:disabled{background:#9ca3af;cursor:not-allowed}
+.ghStatus{font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ghStatus .dot{width:10px;height:10px;border-radius:999px;background:#9ca3af;flex-shrink:0}
+.ghStatus.ok .dot{background:#16a34a}
+.ghStatus.err .dot{background:#dc2626}
+.ghStatus.warn .dot{background:#f59e0b}
+details.ghPanel{border:1px solid var(--line);border-radius:18px;background:#fff;padding:0;overflow:hidden}
+details.ghPanel>summary{padding:14px 16px;cursor:pointer;font-weight:800;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+details.ghPanel>summary::-webkit-details-marker{display:none}
+details.ghPanel>summary:after{content:'▾';opacity:.5}
+details.ghPanel[open]>summary:after{content:'▴'}
+details.ghPanel .ghBody{padding:0 16px 16px;display:grid;gap:10px}
 @media(max-width:680px){.grid,.topTools{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}.actions{display:grid}.actions button,.actions .btn{width:100%}}
 </style>
 </head>
@@ -72,7 +85,8 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
       <div class="actions">
         <a class="btn secondary" href="index.html">Torna alla app</a>
         <button class="secondary" id="reload">Ricarica da GitHub</button>
-        <button id="download">Scarica promo.json</button>
+        <button class="secondary" id="download">Scarica promo.json</button>
+        <button class="publish" id="publish">Pubblica su GitHub</button>
       </div>
     </div>
     <div class="body">
@@ -95,6 +109,43 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
         </div>
       </div>
 
+      <details class="ghPanel" id="ghPanel">
+        <summary><span><span id="ghSummaryText">⚙️ Configurazione GitHub</span> <span id="ghSummaryStatus" class="ghStatus" style="display:inline-flex;margin-left:8px"></span></span></summary>
+        <div class="ghBody">
+          <div class="small">Configura la pubblicazione automatica su GitHub. Il token viene salvato solo su questo dispositivo (IndexedDB), non viene mai inviato a nessuno tranne <code>api.github.com</code>.</div>
+          <div class="grid">
+            <label>Owner (utente/organizzazione)<input id="ghOwner" placeholder="es. pezzaliapp" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+            <label>Repository<input id="ghRepo" placeholder="es. listino-configuratore" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+          </div>
+          <div class="grid">
+            <label>Branch<input id="ghBranch" placeholder="main" value="main" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+            <label>Path del file<input id="ghPath" placeholder="promo/promo.json" value="promo/promo.json" autocapitalize="off" autocomplete="off" spellcheck="false"></label>
+          </div>
+          <label>Personal Access Token (fine-grained)
+            <input id="ghToken" type="password" placeholder="github_pat_..." autocapitalize="off" autocomplete="off" spellcheck="false">
+          </label>
+          <div class="actions">
+            <button class="blue" id="ghSave">Salva configurazione</button>
+            <button class="secondary" id="ghTest">Test connessione</button>
+            <button class="danger" id="ghClear">Rimuovi token</button>
+          </div>
+          <div id="ghResult" class="small"></div>
+          <details>
+            <summary class="small" style="cursor:pointer"><b>Come creare un Personal Access Token (1 minuto)</b></summary>
+            <ol class="small" style="margin-top:8px;line-height:1.6;padding-left:20px">
+              <li>Vai su <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a> (devi essere loggato)</li>
+              <li><b>Token name:</b> es. <code>listino-configuratore-admin</code></li>
+              <li><b>Expiration:</b> 90 giorni (rinnovabile)</li>
+              <li><b>Repository access:</b> seleziona <i>Only select repositories</i> → scegli solo <code>listino-configuratore</code></li>
+              <li><b>Permissions → Repository permissions:</b> trova <b>Contents</b> e impostalo su <i>Read and write</i></li>
+              <li>Premi <b>Generate token</b>, copia il token (inizia con <code>github_pat_</code>) e incollalo qui sopra</li>
+              <li>Premi <b>Salva configurazione</b>, poi <b>Test connessione</b> per verificare</li>
+            </ol>
+            <div class="small" style="margin-top:8px"><b>Sicurezza:</b> il token resta solo sul tuo dispositivo. Se cambi dispositivo o lo perdi, revoca il token su GitHub e generane uno nuovo. Ogni admin del team può avere il proprio token.</div>
+          </details>
+        </div>
+      </details>
+
       <div id="saveState" class="small"><span class="pill">Bozza locale attiva</span></div>
       <div id="sizeInfo" class="small"></div>
       <div id="rows"></div>
@@ -115,11 +166,23 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
 const ADMIN_PASSWORD='admin';
 const DRAFT_KEY_LEGACY='listino_promo_admin_draft_v2';
 const DRAFT_KEY_IDB='listino_promo_admin_draft_v3';
+const GH_CONFIG_KEY='listino_promo_admin_gh_config_v1';
+const GH_SHA_KEY='listino_promo_admin_gh_sha_v1';
 const MAX_FILE_MB=8;
 const WARN_TOTAL_MB=10;
 const DANGER_TOTAL_MB=25;
 let promos=[];
 const $=id=>document.getElementById(id);
+
+/* Conversione UTF-8 -> base64 (asincrona, gestisce stringhe multi-MB) */
+function utf8ToBase64(str){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{const s=reader.result;const i=s.indexOf(',');resolve(s.slice(i+1));};
+    reader.onerror=()=>reject(reader.error);
+    reader.readAsDataURL(new Blob([str],{type:'text/plain'}));
+  });
+}
 
 /* IndexedDB (riusa il DB esistente listino_pro_db) */
 function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open('listino_pro_db',1);req.onupgradeneeded=()=>req.result.createObjectStore('files');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
@@ -262,6 +325,39 @@ function clearEmbeddedFile(i){
 
 /* Caricamento iniziale */
 async function loadFromGithub(){
+  // Se è configurato il token GitHub, usa l'API: così otteniamo anche lo sha aggiornato
+  // ed evitiamo conflitti spuri al prossimo publish.
+  const cfg=await ghGetConfig();
+  if(cfg.token && cfg.owner && cfg.repo){
+    try{
+      const apiUrl=`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${cfg.path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`;
+      const r=await fetch(apiUrl,{headers:ghHeaders(cfg.token),cache:'no-store'});
+      if(r.ok){
+        const meta=await r.json();
+        // meta.content è base64 con eventuali \n
+        const b64=(meta.content||'').replace(/\s/g,'');
+        const bin=atob(b64);
+        const bytes=new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+        const text=new TextDecoder().decode(bytes);
+        const data=JSON.parse(text);
+        if(!Array.isArray(data)) throw new Error('Formato JSON non valido');
+        promos=data.map(normalize);
+        await ghSetSavedSha(meta.sha);
+        await saveDraft();
+        render();
+        alert(`Promo ricaricate da GitHub (versione corrente, sha ${String(meta.sha||'').slice(0,7)}) e salvate come bozza locale.`);
+        return;
+      }else if(r.status===404){
+        promos=[];await ghSetSavedSha(null);await saveDraft();render();
+        alert('Su GitHub non c\'è ancora un promo.json. Aggiungi promo e premi Pubblica per crearlo.');
+        return;
+      }
+      // altri errori → fallback al fetch pubblico
+      console.warn('GitHub API fallita, fallback a fetch pubblico',r.status);
+    }catch(e){console.warn('Errore API GitHub, fallback',e);}
+  }
+  // Fallback: fetch del file pubblicato (senza sha)
   try{
     const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
     const data=await r.json();
@@ -396,11 +492,189 @@ async function importData(data){
   await saveDraft();render();alert('JSON importato e salvato come bozza locale.');
 }
 
+/* ================== GITHUB API ================== */
+async function ghGetConfig(){
+  try{
+    const raw=await idbGet(GH_CONFIG_KEY);
+    if(!raw) return {owner:'',repo:'',branch:'main',path:'promo/promo.json',token:''};
+    return Object.assign({owner:'',repo:'',branch:'main',path:'promo/promo.json',token:''}, JSON.parse(raw));
+  }catch(e){console.warn('Errore lettura config GH',e);return {owner:'',repo:'',branch:'main',path:'promo/promo.json',token:''};}
+}
+async function ghSetConfig(cfg){
+  await idbSet(GH_CONFIG_KEY, JSON.stringify(cfg));
+}
+async function ghGetSavedSha(){
+  try{return await idbGet(GH_SHA_KEY);}catch(e){return null;}
+}
+async function ghSetSavedSha(sha){
+  if(sha) await idbSet(GH_SHA_KEY, sha);
+  else { try{await idbDel(GH_SHA_KEY);}catch(e){} }
+}
+function ghHeaders(token){
+  return {'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'};
+}
+function setGhStatus(state, text){
+  const el=$('ghSummaryStatus');
+  if(!el) return;
+  el.className='ghStatus '+(state||'');
+  el.innerHTML=text?`<span class="dot"></span>${esc(text)}`:'';
+}
+function setGhResult(html, kind){
+  const el=$('ghResult');
+  if(!el) return;
+  el.innerHTML=html?`<div class="${kind==='ok'?'okbox':kind==='err'?'errbox':'notice'}" style="margin-top:8px">${html}</div>`:'';
+}
+async function loadGhConfigToUI(){
+  const cfg=await ghGetConfig();
+  $('ghOwner').value=cfg.owner||'';
+  $('ghRepo').value=cfg.repo||'';
+  $('ghBranch').value=cfg.branch||'main';
+  $('ghPath').value=cfg.path||'promo/promo.json';
+  $('ghToken').value=cfg.token||'';
+  refreshGhSummary(cfg);
+}
+function refreshGhSummary(cfg){
+  if(cfg && cfg.token && cfg.owner && cfg.repo){
+    setGhStatus('ok', `${cfg.owner}/${cfg.repo}@${cfg.branch||'main'} configurato`);
+  }else{
+    setGhStatus('warn', 'Non configurato — clicca per impostare');
+  }
+}
+async function ghSaveConfig(){
+  const cfg={
+    owner:$('ghOwner').value.trim(),
+    repo:$('ghRepo').value.trim(),
+    branch:($('ghBranch').value.trim()||'main'),
+    path:($('ghPath').value.trim()||'promo/promo.json'),
+    token:$('ghToken').value.trim()
+  };
+  if(!cfg.owner||!cfg.repo){setGhResult('Owner e Repo sono obbligatori.','err');return;}
+  if(!cfg.token){setGhResult('Token mancante.','err');return;}
+  await ghSetConfig(cfg);
+  await ghSetSavedSha(null); // invalida sha precedente
+  setGhResult('✅ Configurazione salvata. Ora premi <b>Test connessione</b> per verificare.','ok');
+  refreshGhSummary(cfg);
+}
+async function ghTest(){
+  const cfg=await ghGetConfig();
+  if(!cfg.token||!cfg.owner||!cfg.repo){setGhResult('Compila e salva prima la configurazione.','err');return;}
+  setGhResult('Test in corso...','');
+  try{
+    const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}`,{headers:ghHeaders(cfg.token)});
+    if(r.ok){
+      const data=await r.json();
+      const canPush=data.permissions&&data.permissions.push;
+      const html=`✅ Connessione OK<br>Repo: <b>${esc(data.full_name)}</b><br>Branch default: <b>${esc(data.default_branch)}</b><br>Permesso scrittura: <b>${canPush?'sì':'NO — il token non può scrivere'}</b>`;
+      setGhResult(html, canPush?'ok':'err');
+      if(canPush) setGhStatus('ok', `${cfg.owner}/${cfg.repo}@${cfg.branch} pronto`);
+      else setGhStatus('err','Token senza permesso scrittura');
+    }else if(r.status===401){
+      setGhResult('❌ Token non valido o scaduto. Generane uno nuovo su GitHub.','err');
+      setGhStatus('err','Token non valido');
+    }else if(r.status===404){
+      setGhResult(`❌ Repo non trovata oppure il token non ha accesso a <code>${esc(cfg.owner)}/${esc(cfg.repo)}</code>. Verifica il nome owner/repo e che il token sia autorizzato per questa repo.`,'err');
+      setGhStatus('err','Repo non accessibile');
+    }else{
+      setGhResult(`❌ Errore (${r.status}): ${esc(await r.text().catch(()=>''))}`,'err');
+    }
+  }catch(e){
+    setGhResult('Errore di rete: '+esc(e.message),'err');
+  }
+}
+async function ghClearToken(){
+  if(!confirm('Rimuovere token e configurazione GitHub da questo dispositivo? Le promo locali non vengono toccate.')) return;
+  try{await idbDel(GH_CONFIG_KEY);}catch(e){}
+  try{await idbDel(GH_SHA_KEY);}catch(e){}
+  $('ghOwner').value='';$('ghRepo').value='';$('ghBranch').value='main';$('ghPath').value='promo/promo.json';$('ghToken').value='';
+  setGhResult('Configurazione rimossa.','ok');
+  setGhStatus('warn','Non configurato');
+}
+async function ghPublish(){
+  const cfg=await ghGetConfig();
+  if(!cfg.token||!cfg.owner||!cfg.repo){
+    alert('Configura prima GitHub: apri il pannello "⚙️ Configurazione GitHub", incolla il token e premi Salva configurazione.');
+    $('ghPanel').open=true;
+    $('ghPanel').scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  await saveDraft();
+  const json=currentJson();
+  const totalMB=new Blob([json]).size/(1024*1024);
+  if(totalMB>=DANGER_TOTAL_MB){
+    if(!confirm(`Il file è ${totalMB.toFixed(1)} MB, sopra la soglia consigliata. Pubblicare comunque?`)) return;
+  }
+  const btn=$('publish');
+  const orig=btn.textContent;
+  btn.disabled=true;btn.textContent='Pubblicazione in corso...';
+  try{
+    // 1) Get current sha (file potrebbe non esistere)
+    let remoteSha=null;
+    const apiBase=`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${cfg.path.split('/').map(encodeURIComponent).join('/')}`;
+    try{
+      const rGet=await fetch(`${apiBase}?ref=${encodeURIComponent(cfg.branch)}&t=${Date.now()}`,{headers:ghHeaders(cfg.token),cache:'no-store'});
+      if(rGet.ok){
+        const data=await rGet.json();
+        remoteSha=data.sha;
+      }else if(rGet.status===404){
+        remoteSha=null; // file non esiste, lo creiamo
+      }else if(rGet.status===401){
+        throw new Error('Token non valido o scaduto.');
+      }else{
+        throw new Error(`GET fallito (${rGet.status})`);
+      }
+    }catch(e){
+      throw new Error('Lettura stato remoto fallita: '+e.message);
+    }
+    // 2) PUT nuovo contenuto
+    const contentB64=await utf8ToBase64(json);
+    const body={
+      message:`Update promo.json (${promos.length} promo, ${(new Blob([json]).size/1024).toFixed(0)} KB)`,
+      content:contentB64,
+      branch:cfg.branch
+    };
+    if(remoteSha) body.sha=remoteSha;
+    const rPut=await fetch(apiBase,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},ghHeaders(cfg.token)),body:JSON.stringify(body)});
+    if(rPut.ok){
+      const data=await rPut.json();
+      const commitSha=(data.commit&&data.commit.sha)||'';
+      await ghSetSavedSha(data.content&&data.content.sha);
+      const shortSha=commitSha.slice(0,7);
+      const url=data.commit&&data.commit.html_url;
+      alert(`✅ Pubblicato su GitHub!\n\nCommit: ${shortSha}\n\nGli utenti vedranno l'aggiornamento entro 1-3 minuti (tempo di deploy GitHub Pages). Suggerisci loro di chiudere e riaprire l'app, oppure premere Aggiorna nella sezione Promo.`);
+      $('saveState').innerHTML=`<span class="pill embedded">Pubblicato</span> Commit <code>${esc(shortSha)}</code> ${url?`&middot; <a href="${esc(url)}" target="_blank" rel="noopener">vedi su GitHub</a>`:''}`;
+    }else if(rPut.status===409||rPut.status===422){
+      const errData=await rPut.json().catch(()=>({}));
+      const msg=errData.message||'';
+      if(/sha/i.test(msg)||rPut.status===409){
+        alert('⚠️ Conflitto: qualcun altro ha aggiornato promo.json mentre stavi lavorando.\n\nPremi "Ricarica da GitHub" (perderai le modifiche locali, oppure scarica prima un backup), poi rifai le modifiche e ripubblica.');
+      }else{
+        alert(`Errore validazione (${rPut.status}): ${msg}`);
+      }
+    }else if(rPut.status===401){
+      alert('Token non valido o scaduto. Aggiornalo nel pannello "Configurazione GitHub".');
+      setGhStatus('err','Token non valido');
+    }else if(rPut.status===403){
+      alert('Permesso negato. Il token non ha permesso di scrittura su questa repo.');
+    }else{
+      const txt=await rPut.text().catch(()=>'');
+      alert(`Errore pubblicazione (${rPut.status}): ${txt.slice(0,500)}`);
+    }
+  }catch(e){
+    alert('Errore: '+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent=orig;
+  }
+}
+
 /* UI binding */
-$('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');loadInitial();};
+$('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');loadInitial();loadGhConfigToUI();};
 $('pass').addEventListener('keydown',e=>{if(e.key==='Enter') $('unlock').click();});
 $('reload').onclick=()=>{if(confirm('Ricaricare da GitHub? La bozza locale verrà sostituita.')) loadFromGithub();};
 $('download').onclick=downloadJson;
+$('publish').onclick=ghPublish;
+$('ghSave').onclick=ghSaveConfig;
+$('ghTest').onclick=ghTest;
+$('ghClear').onclick=ghClearToken;
 $('copy').onclick=async()=>{await saveDraft();await navigator.clipboard.writeText(currentJson());alert('JSON copiato');};
 $('add').onclick=async()=>{promos.push(normalize({id:uid(),title:'Nuova promo',description:'',url:'',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()}));await saveDraft();render();};
 $('clearDraft').onclick=async()=>{
