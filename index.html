@@ -51,7 +51,8 @@ tr:hover td{background:#fafafa}
 .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:850}
 .price{text-align:right;font-weight:850;white-space:nowrap}
 .small{font-size:12px;color:var(--muted)}
-.addBtn{padding:8px 10px;border-radius:11px}
+.addBtn{padding:8px 10px;border-radius:11px;transition:background .2s,color .2s}
+.btn-aggiunto{background:#10b981!important;color:#fff!important}
 .empty{padding:32px;text-align:center;color:var(--muted)}
 .side{display:flex;flex-direction:column;gap:18px}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px}
@@ -389,6 +390,17 @@ function bindArticleButtons(scope){
     const id=Number(b.dataset.id);
     const qtyInput=scope.querySelector(`[data-addqty="${id}"]`);
     addQuote(id, qtyInput ? Number(qtyInput.value)||1 : 1);
+    // Feedback visivo: pulsante verde + "✓ Aggiunto" + disabled per 1,2s
+    // così l'utente vede che il click ha effetto e non ripreme creando duplicati.
+    b.disabled=true;
+    b.classList.add('btn-aggiunto');
+    const orig=b.textContent;
+    b.textContent='✓ Aggiunto';
+    setTimeout(()=>{
+      b.disabled=false;
+      b.classList.remove('btn-aggiunto');
+      b.textContent=orig;
+    },1200);
   });
   scope.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(Number(b.dataset.page)));
 }
