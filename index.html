@@ -142,7 +142,10 @@ tr:hover td{background:#fafafa}
 }
 
 /* Promo senza Cloudflare */
-.promoIntro{padding:14px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.4}
+.promoIntro{padding:10px 16px 12px;border-bottom:1px solid var(--line);font-size:11px;color:#9ca3af;line-height:1.4}
+.promoDisclaimer{margin:14px 16px;padding:12px 14px;background:#FFF4E5;border-left:4px solid #f59e0b;border-radius:6px;color:#111827;font-weight:600;font-size:13.5px;line-height:1.45}
+.promoDisclaimer b{font-weight:800;display:block;margin-bottom:4px;font-size:13.5px}
+@media(max-width:700px){.promoDisclaimer{margin:12px 12px;padding:11px 12px;font-size:13px}.promoDisclaimer b{font-size:13px}}
 .promoList{padding:14px 16px;display:grid;gap:12px}
 .promoCard{border:1px solid var(--line);border-radius:18px;background:#fff;padding:14px;box-shadow:0 8px 18px rgba(15,23,42,.05)}
 .promoCardHead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:6px}
@@ -243,7 +246,8 @@ tr:hover td{background:#fafafa}
         <div class="actions"><button id="copyQuote">Copia testo</button><button class="whatsappBtn" id="sendWhatsApp">Invia WhatsApp</button><button class="secondary" id="exportCsv">Export CSV</button></div>
       </section>
       <section class="panel" id="promoPanel">
-        <div class="panelHead"><h2>Promo</h2><button class="ghost" id="promoRefresh" type="button">Aggiorna</button></div>
+        <div class="panelHead"><h2 style="line-height:1.25">PROMO — PREZZI NETTI RISERVATI AL RIVENDITORE</h2><button class="ghost" id="promoRefresh" type="button">Aggiorna</button></div>
+        <div class="promoDisclaimer" role="note" aria-label="Avviso prezzi"><b>Non sono prezzi al cliente finale.</b>I prezzi non includono IVA 22%, trasporto EX WORK e installazione.</div>
         <div class="promoIntro">Promozioni caricate dalla cartella <b>promo/</b> della repo GitHub. Le promo non ancora iniziate, scadute o disattivate non vengono mostrate dalla app.</div>
         <div id="promoList" class="promoList"><div class="promoEmpty">Caricamento promo...</div></div>
       </section>
