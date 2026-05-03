@@ -36,6 +36,37 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
 .row .lbl{display:block;font-weight:600;color:#1f2a44;font-size:13px;margin-bottom:6px}
 .row .lbl .req{color:#dc2626;margin-left:2px;font-weight:700}
 .row .hint{display:block;font-size:12px;color:#6b7280;margin-top:4px;line-height:1.4}
+.row .rowMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#374151;margin-top:2px}
+.row .rowMeta .metaLabel{font-weight:600;color:#1f2a44}
+.row .rowMeta .badge{font-weight:600;padding:4px 10px;border-radius:6px;font-size:12.5px;display:inline-block;line-height:1.3}
+.row .rowMeta .badge.badge-active{background:#ecfdf5;color:#047857}
+.row .rowMeta .badge.badge-off{background:#fef2f2;color:#b91c1c}
+.row .rowMeta .pill{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;line-height:1.3}
+.row .rowMeta .pill.url{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
+.row .rowMeta .pill.embedded{background:#ecfdf5;color:#047857;border:1px solid #86efac}
+.row .rowMeta .pill.warn{background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5}
+.row .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.row .actions button{padding:10px 18px;border-radius:8px;font-weight:600;font-size:14px;border:0;cursor:pointer;transition:background .15s,box-shadow .15s}
+.row .actions button.btnSave{background:#1F2A44;color:#fff}
+.row .actions button.btnSave:hover{background:#0f1729}
+.row .actions button.btnDeact{background:#fff7ed;color:#c2410c;border:1.5px solid #fdba74}
+.row .actions button.btnDeact:hover{background:#ffedd5}
+.row .actions button.btnReact{background:#ecfdf5;color:#047857;border:1.5px solid #86efac}
+.row .actions button.btnReact:hover{background:#d1fae5}
+.row .actions button.btnDel{background:#fef2f2;color:#b91c1c;border:1.5px solid #fca5a5}
+.row .actions button.btnDel:hover{background:#fee2e2}
+@media(max-width:680px){.row .actions button{min-height:44px;padding:11px 16px;flex:1 1 auto}}
+#rowsFooter{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 12px}
+#rowsFooter button{padding:12px 22px;border-radius:8px;font-weight:600;font-size:14px;border:0;cursor:pointer;transition:background .15s}
+#rowsFooter button#add{background:#1F2A44;color:#fff}
+#rowsFooter button#add:hover{background:#0f1729}
+#rowsFooter button#copy{background:#fff;color:#1f2a44;border:1.5px solid #d0d4dc;font-weight:500;padding:12px 18px}
+#rowsFooter button#copy:hover{background:#f9fafb;border-color:#9ca3af}
+#rowsFooter button#migrate{background:#fff7ed;color:#c2410c;border:1.5px solid #fdba74;padding:12px 18px}
+#rowsFooter button#migrate:hover{background:#ffedd5}
+#rowsFooter button:disabled{opacity:.55;cursor:not-allowed}
+#rowsHelp{margin-bottom:0}
+@media(max-width:680px){#rowsFooter button{min-height:44px;flex:1 1 auto}}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .small{font-size:13px;color:var(--muted);line-height:1.45}
@@ -161,12 +192,12 @@ details.ghPanel .ghBody{padding:0 16px 16px;display:grid;gap:10px}
       <div id="saveState" class="small"><span class="pill">Bozza locale attiva</span></div>
       <div id="sizeInfo" class="small"></div>
       <div id="rows"></div>
-      <div class="actions">
+      <div id="rowsFooter">
         <button id="add">Aggiungi riga promo</button>
-        <button class="secondary" id="copy">Copia JSON</button>
-        <button class="secondary" id="migrate" title="Estrae i file embedded come data: URI dal JSON, li pusha su GitHub e aggiorna l'url al path. Serve PAT configurato.">Migra embedded → file GitHub</button>
+        <button id="copy">Copia JSON</button>
+        <button id="migrate" title="Estrae i file embedded come data: URI dal JSON, li pusha su GitHub e aggiorna l'url al path. Serve PAT configurato.">Migra embedded → file GitHub</button>
       </div>
-      <div class="small">Per eliminare una promo, usa <b>Elimina dal JSON</b>. Se vuoi solo nasconderla temporaneamente, usa <b>Disattiva</b>.</div>
+      <div class="small" id="rowsHelp">Per eliminare una promo, usa <b>Elimina dal JSON</b>. Se vuoi solo nasconderla temporaneamente, usa <b>Disattiva</b>.</div>
       <details>
         <summary class="small" style="cursor:pointer">Anteprima JSON (clicca per espandere)</summary>
         <div id="jsonPreview" class="code" style="margin-top:8px"></div>
@@ -643,11 +674,11 @@ function render(){
         <label><span class="lbl">Data inizio<span class="req">*</span></span><input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"><span class="hint">La promo diventa visibile da questa data. Formato: GG/MM/AAAA</span></label>
         <label><span class="lbl">Scadenza<span class="req">*</span></span><input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"><span class="hint">Dopo questa data la promo sparisce automaticamente. Formato: GG/MM/AAAA</span></label>
       </div>
-      <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'} ${dataUri?' &middot; <span class="pill warn">embedded legacy</span>':isManagedFile?' &middot; <span class="pill embedded">file GitHub</span>':hasManualUrl?' &middot; <span class="pill url">URL/path esterno</span>':' &middot; <span class="pill warn">nessun file</span>'}</div>
+      <div class="rowMeta"><span class="metaLabel">Stato:</span><span class="badge ${p.active?'badge-active':'badge-off'}">${p.active?'ATTIVA':'DISATTIVATA'}</span>${dataUri?'<span class="pill warn">embedded legacy</span>':isManagedFile?'<span class="pill embedded">file GitHub</span>':hasManualUrl?'<span class="pill url">URL/path esterno</span>':'<span class="pill warn">nessun file</span>'}</div>
       <div class="actions">
-        <button data-save="${i}">Salva riga</button>
-        <button class="${p.active?'danger':'ok'}" data-toggle="${i}">${p.active?'Disattiva':'Riattiva'}</button>
-        <button class="danger" data-del="${i}">Elimina dal JSON</button>
+        <button class="btnSave" data-save="${i}">Salva riga</button>
+        <button class="${p.active?'btnDeact':'btnReact'}" data-toggle="${i}">${p.active?'Disattiva':'Riattiva'}</button>
+        <button class="btnDel" data-del="${i}">Elimina dal JSON</button>
       </div>
     </div>`;
   }).join('') || '<div class="small">Nessuna promo presente. Usa "Aggiungi riga promo" qui sotto.</div>';
