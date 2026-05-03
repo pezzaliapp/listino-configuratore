@@ -154,6 +154,7 @@ details.ghPanel .ghBody{padding:0 16px 16px;display:grid;gap:10px}
       <div class="actions">
         <button id="add">Aggiungi riga promo</button>
         <button class="secondary" id="copy">Copia JSON</button>
+        <button class="secondary" id="migrate" title="Estrae i file embedded come data: URI dal JSON, li pusha su GitHub e aggiorna l'url al path. Serve PAT configurato.">Migra embedded → file GitHub</button>
       </div>
       <div class="small">Per eliminare una promo, usa <b>Elimina dal JSON</b>. Se vuoi solo nasconderla temporaneamente, usa <b>Disattiva</b>.</div>
       <details>
@@ -250,6 +251,68 @@ async function uploadPromoBinary(cfg, blob, title, mime){
   throw new Error(`GitHub API ${r.status}: ${detail.slice(0,300)}`);
 }
 
+/* Migrazione bonus: estrae le promo con url:"data:..." dal JSON corrente, le pusha
+   come file in promo/ via Contents API, aggiorna le url al path. Sequenziale per promo
+   (un commit per file). Backup automatico prima. Errori riportati a fine batch. */
+async function migrateEmbeddedToFiles(){
+  const cfg=await ghGetConfig();
+  if(!cfg.token||!cfg.owner||!cfg.repo){
+    alert('Configura prima GitHub: serve il token per pushare i binari.');
+    $('ghPanel').open=true;
+    $('ghPanel').scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  // Snapshot degli indici prima di iniziare (la lista promos può cambiare durante il loop).
+  const targets=promos.map((p,i)=>({i, p:Object.assign({},p)})).filter(({p})=>isDataUri(p.url));
+  if(!targets.length){alert('Nessuna promo con file embedded (data: URI) da migrare.');return;}
+  if(!confirm(`Migrare ${targets.length} promo embedded?\n\nVerrà fatto un commit binario su GitHub per ogni file. Il JSON locale verrà aggiornato. Per pubblicare anche il JSON, premi "Pubblica su GitHub" alla fine.`)) return;
+
+  // Backup automatico: se la migrazione si interrompe, posso ripristinare lo stato.
+  await backupCurrentDraft('pre-migrate');
+
+  const migBtn=$('migrate');
+  const orig=migBtn.textContent;
+  migBtn.disabled=true;
+
+  let done=0;const errs=[];
+  for(const {i, p} of targets){
+    const titleHint=p.title||p.fileName||'promo';
+    $('saveState').innerHTML=`<span class="pill">Migrazione ${done+1}/${targets.length}…</span> ${esc(titleHint)}`;
+    try{
+      // Convert data URI → Blob (mime corretto preservato dal data URI).
+      const r=await fetch(p.url);
+      const blob=await r.blob();
+      // Validation difensiva: rifiuta blob con MIME non in whitelist.
+      if(!ALLOWED_MIME.has(blob.type)){
+        throw new Error(`MIME non supportato: ${blob.type}`);
+      }
+      const path=await uploadPromoBinary(cfg, blob, titleHint, blob.type);
+      // Trova la promo per id (l'indice potrebbe essere cambiato se rendering è asincrono).
+      const idx=promos.findIndex(q=>q.id===p.id);
+      const target=idx>=0?idx:i;
+      promos[target].url=path;
+      // Mantieni fileName/fileMime/fileSize dal JSON originale come metadati informativi.
+      // (fileSize del data: URI ≈ size del blob — restano coerenti.)
+      promos[target]=normalize(promos[target]);
+      binariesUploadedThisSession++;
+      await saveDraft(); // salva incrementalmente: se interrompo, le promo già migrate sono salve
+      done++;
+    }catch(e){
+      console.error('Migrazione fallita per',p.title,e);
+      errs.push({title:p.title||'(senza titolo)', err:e.message});
+    }
+  }
+  render();
+  migBtn.disabled=false;
+  migBtn.textContent=orig;
+  if(errs.length){
+    $('saveState').innerHTML=`<span class="pill warn">Migrazione: ${done} ok / ${errs.length} errori</span>`;
+    alert(`Migrazione completata: ${done} promo migrate, ${errs.length} fallite.\n\nErrori:\n${errs.map(e=>'• '+e.title+': '+e.err).join('\n')}\n\nLa bozza locale è aggiornata per le promo che sono andate a buon fine.`);
+  }else{
+    $('saveState').innerHTML=`<span class="pill embedded">✅ Migrazione completata</span> ${done} promo ora puntano a file su GitHub. Premi <b>Pubblica</b> per aggiornare anche promo.json.`;
+    alert(`✅ Migrazione completata: ${done} promo migrate da data: URI a file GitHub.\n\nOra premi "Pubblica su GitHub" per committare anche il promo.json aggiornato.`);
+  }
+}
 let promos=[];
 const $=id=>document.getElementById(id);
 
@@ -840,6 +903,7 @@ $('ghSave').onclick=ghSaveConfig;
 $('ghTest').onclick=ghTest;
 $('ghClear').onclick=ghClearToken;
 $('copy').onclick=async()=>{await saveDraft();await navigator.clipboard.writeText(currentJson());alert('JSON copiato');};
+$('migrate').onclick=migrateEmbeddedToFiles;
 $('add').onclick=async()=>{promos.push(normalize({id:uid(),title:'Nuova promo',description:'',url:'',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()}));await saveDraft();render();};
 $('clearDraft').onclick=async()=>{
   if(confirm('Cancellare la bozza locale? Poi puoi ricaricare da GitHub o importare un JSON.')){
