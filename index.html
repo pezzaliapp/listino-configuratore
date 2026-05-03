@@ -437,7 +437,18 @@ function isPromoVisible(p){
 }
 function daysToExpiry(p){const exp=parsePromoDate(promoExpiry(p), true);if(!exp) return null;return Math.ceil((exp-new Date())/(1000*60*60*24));}
 function promoUrl(p){return p.url || '#';}
-function promoWhatsAppText(p){const link=new URL(promoUrl(p), location.href).href;return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\n${link}`;}
+function isDataUri(s){return typeof s==='string' && s.startsWith('data:');}
+function promoWhatsAppText(p){
+  const u=promoUrl(p);
+  // I data URI base64 non si possono incollare in WhatsApp (peso e formato).
+  // Per le promo con file incorporato condividiamo solo testo + invito ad aprire l'app.
+  if(isDataUri(u)){
+    const appLink=new URL('./', location.href).href;
+    return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\nApri l'app: ${appLink}`;
+  }
+  const link=new URL(u, location.href).href;
+  return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\n${link}`;
+}
 function renderPromos(promos){
   if(!els.promoList) return;
   const visible=(Array.isArray(promos)?promos:[]).filter(isPromoVisible);
@@ -454,7 +465,9 @@ function renderPromos(promos){
   if(newIds.length){setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);localStorage.setItem('listino_promo_seen_ids', JSON.stringify([...new Set([...seen, ...visible.map(promoId)])]));}
 }
 const PROMO_ADMIN_DRAFT_KEY='listino_promo_admin_draft_v2';
+const PROMO_ADMIN_DRAFT_KEY_IDB='listino_promo_admin_draft_v3';
 function readAdminPromoDraft(){
+  // legacy: chiave localStorage v2 (senza file incorporati)
   try{
     const raw=localStorage.getItem(PROMO_ADMIN_DRAFT_KEY);
     if(!raw) return null;
@@ -465,18 +478,36 @@ function readAdminPromoDraft(){
     return null;
   }
 }
+async function readAdminPromoDraftIdb(){
+  // nuova: chiave IndexedDB v3 (con file incorporati come data URI)
+  try{
+    const raw=await idbGet(PROMO_ADMIN_DRAFT_KEY_IDB);
+    if(!raw) return null;
+    const data=JSON.parse(raw);
+    return Array.isArray(data)?data:null;
+  }catch(e){
+    console.warn('Bozza admin promo IDB non valida', e);
+    return null;
+  }
+}
 async function loadPromos(){
   if(!els.promoList) return;
   els.promoList.innerHTML='<div class="promoEmpty">Caricamento promo...</div>';
 
-  // Sul tuo dispositivo la app usa prima la bozza salvata da Admin Promo.
+  // 1) Bozza admin in IndexedDB (nuovo formato con file incorporati)
+  const idbDraft=await readAdminPromoDraftIdb();
+  if(idbDraft){
+    renderPromos(idbDraft);
+    return;
+  }
+  // 2) Bozza admin legacy in localStorage
   const localDraft=readAdminPromoDraft();
   if(localDraft){
     renderPromos(localDraft);
     return;
   }
 
-  // Per gli utenti legge invece il promo.json pubblicato su GitHub.
+  // 3) Per gli utenti finali: legge il promo.json pubblicato.
   try{
     const res=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
     if(!res.ok) throw new Error('promo.json non trovato');

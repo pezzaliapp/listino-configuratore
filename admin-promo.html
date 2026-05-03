@@ -6,14 +6,55 @@
 <title>Admin Promo - Configuratore Listino PRO</title>
 <style>
 :root{--bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--danger:#991b1b;--ok:#166534;--blue:#1d4ed8}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.app{max-width:1040px;margin:0 auto;padding:18px}.hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:26px;padding:24px;margin-bottom:18px}.hero h1{margin:0;font-size:clamp(28px,4vw,44px)}.hero p{color:#e5e7eb;line-height:1.45}.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden;margin-bottom:16px}.head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}h2{margin:0;font-size:18px}.body{padding:16px;display:grid;gap:12px}button,.btn{border:0;border-radius:14px;background:var(--brand);color:#fff;padding:11px 14px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}button.secondary,.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}button.blue{background:#2563eb}button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}button.ok{background:#dcfce7;color:var(--ok);border:1px solid #bbf7d0}input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px;font:inherit;background:#fff}.row{border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}.small{font-size:13px;color:var(--muted);line-height:1.45}.hide{display:none!important}.notice{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:16px;padding:12px;line-height:1.45}.okbox{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:12px;line-height:1.45}.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:12px;white-space:pre-wrap;max-height:320px;overflow:auto}.status{font-size:13px;font-weight:900;color:var(--muted)}.status.active{color:var(--ok)}.status.off{color:var(--danger)}.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900;background:#eef2ff;color:#1d4ed8;border:1px solid #c7d2fe}.topTools{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}@media(max-width:680px){.grid,.topTools{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}.actions{display:grid}.actions button,.actions .btn{width:100%}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.app{max-width:1040px;margin:0 auto;padding:18px}
+.hero{background:linear-gradient(135deg,#111827,#374151);color:white;border-radius:26px;padding:24px;margin-bottom:18px}
+.hero h1{margin:0;font-size:clamp(28px,4vw,44px)}
+.hero p{color:#e5e7eb;line-height:1.45}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden;margin-bottom:16px}
+.head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+h2{margin:0;font-size:18px}
+.body{padding:16px;display:grid;gap:12px}
+button,.btn{border:0;border-radius:14px;background:var(--brand);color:#fff;padding:11px 14px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+button.secondary,.btn.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button.blue{background:#2563eb}
+button.danger{background:#fee2e2;color:var(--danger);border:1px solid #fecaca}
+button.ok{background:#dcfce7;color:var(--ok);border:1px solid #bbf7d0}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px;padding:11px;font:inherit;background:#fff}
+.row{border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;gap:10px;background:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.small{font-size:13px;color:var(--muted);line-height:1.45}
+.hide{display:none!important}
+.notice{background:#fffbeb;color:#92400e;border:1px solid #fde68a;border-radius:16px;padding:12px;line-height:1.45}
+.okbox{background:#ecfdf5;color:#166534;border:1px solid #bbf7d0;border-radius:16px;padding:12px;line-height:1.45}
+.errbox{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;border-radius:16px;padding:12px;line-height:1.45}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f9fafb;border:1px solid var(--line);border-radius:16px;padding:12px;white-space:pre-wrap;max-height:320px;overflow:auto;word-break:break-all}
+.status{font-size:13px;font-weight:900;color:var(--muted)}
+.status.active{color:var(--ok)}
+.status.off{color:var(--danger)}
+.pill{display:inline-block;border-radius:999px;padding:4px 8px;font-size:12px;font-weight:900;background:#eef2ff;color:#1d4ed8;border:1px solid #c7d2fe}
+.pill.embedded{background:#dcfce7;color:#166534;border-color:#bbf7d0}
+.pill.url{background:#fef3c7;color:#92400e;border-color:#fde68a}
+.pill.warn{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.topTools{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+.fileBox{background:#f9fafb;border:1px dashed var(--line);border-radius:14px;padding:12px;display:grid;gap:10px}
+.fileBox.has-file{background:#ecfdf5;border-color:#bbf7d0;border-style:solid}
+.fileInfo{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.fileMeta{font-size:13px;color:#374151}
+.fileMeta b{color:#111827}
+.sizeBar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:6px}
+.sizeBar>div{height:100%;background:#10b981;transition:width .3s,background .3s}
+.sizeBar.warn>div{background:#f59e0b}
+.sizeBar.danger>div{background:#ef4444}
+@media(max-width:680px){.grid,.topTools{grid-template-columns:1fr}.head{align-items:flex-start;flex-direction:column}.actions{display:grid}.actions button,.actions .btn{width:100%}}
 </style>
 </head>
 <body>
 <div class="app">
   <section class="hero">
     <h1>Admin Promo</h1>
-    <p>Gestione senza Cloudflare: puoi caricare un <b>promo.json</b>, modificare data inizio/scadenza, disattivare o cancellare una promo, poi scarichi il nuovo file e lo sostituisci su GitHub nella cartella <b>promo/</b>.</p>
+    <p>Carica direttamente PDF o immagini delle promo: vengono <b>incorporate dentro promo.json</b>. Pubblichi su GitHub un solo file e tutti gli utenti vedono le promo aggiornate, senza dover caricare i PDF nella cartella <b>promo/</b>.</p>
   </section>
 
   <section class="panel" id="loginPanel">
@@ -35,38 +76,81 @@
       </div>
     </div>
     <div class="body">
-      <div class="notice"><b>Importante:</b> questa pagina non può scrivere direttamente su GitHub. Le modifiche vengono salvate localmente su questo browser e nel JSON qui sotto. Per aggiornare tutte le app devi premere <b>Scarica promo.json</b> e sostituire <b>promo/promo.json</b> su GitHub.</div>
-      <div class="okbox"><b>Ora il salvataggio funziona:</b> ogni modifica, Disattiva, Riattiva o Elimina viene salvata subito in locale. Se esci e rientri in Admin la ritrovi. Poi scarichi il JSON definitivo.</div>
+      <div class="okbox"><b>Novità:</b> ora puoi caricare PDF e immagini direttamente da qui. Il file viene incorporato nel JSON come base64. Pubblicando solo <b>promo/promo.json</b> aggiornato su GitHub, tutti gli utenti vedono le nuove promo senza bisogno di caricare anche i file PDF/immagine.</div>
+      <div class="notice"><b>Limiti pratici:</b> il JSON con file incorporati può diventare grande. Tieni d'occhio la <b>dimensione totale</b> qui sotto. Sotto i 10 MB nessun problema. Tra 10 e 25 MB l'app rallenta su mobile. Oltre i 25 MB sconsigliato.</div>
 
       <div class="panel" style="box-shadow:none;margin:0">
-        <div class="head"><h2>Carica / importa JSON</h2></div>
+        <div class="head"><h2>Carica / importa JSON esistente</h2></div>
         <div class="body">
           <div class="topTools">
             <input id="jsonFile" type="file" accept="application/json,.json">
             <button class="blue" id="importJson">Importa JSON</button>
           </div>
-          <textarea id="pasteJson" rows="5" placeholder="Oppure incolla qui il contenuto di promo.json e premi Importa testo JSON"></textarea>
-          <div class="actions"><button class="secondary" id="importText">Importa testo JSON</button><button class="danger" id="clearDraft">Cancella bozza locale</button></div>
+          <textarea id="pasteJson" rows="4" placeholder="Oppure incolla qui il contenuto di promo.json e premi Importa testo JSON"></textarea>
+          <div class="actions">
+            <button class="secondary" id="importText">Importa testo JSON</button>
+            <button class="danger" id="clearDraft">Cancella bozza locale</button>
+          </div>
           <div class="small">Se hai un JSON nuovo, caricalo qui. Verrà usato come base per modifiche, date e cancellazioni.</div>
         </div>
       </div>
 
       <div id="saveState" class="small"><span class="pill">Bozza locale attiva</span></div>
+      <div id="sizeInfo" class="small"></div>
       <div id="rows"></div>
-      <div class="actions"><button id="add">Aggiungi riga promo</button><button class="secondary" id="copy">Copia JSON</button></div>
-      <div class="small">Per rimuovere anche il file PDF/JPG fisico, cancellalo dalla cartella <b>promo/</b> su GitHub. Se basta non mostrarlo più, usa <b>Disattiva</b> oppure <b>Elimina dal JSON</b>.</div>
-      <div id="jsonPreview" class="code"></div>
+      <div class="actions">
+        <button id="add">Aggiungi riga promo</button>
+        <button class="secondary" id="copy">Copia JSON</button>
+      </div>
+      <div class="small">Per eliminare una promo, usa <b>Elimina dal JSON</b>. Se vuoi solo nasconderla temporaneamente, usa <b>Disattiva</b>.</div>
+      <details>
+        <summary class="small" style="cursor:pointer">Anteprima JSON (clicca per espandere)</summary>
+        <div id="jsonPreview" class="code" style="margin-top:8px"></div>
+      </details>
     </div>
   </section>
 </div>
+
 <script>
 const ADMIN_PASSWORD='admin';
-const DRAFT_KEY='listino_promo_admin_draft_v2';
+const DRAFT_KEY_LEGACY='listino_promo_admin_draft_v2';
+const DRAFT_KEY_IDB='listino_promo_admin_draft_v3';
+const MAX_FILE_MB=8;
+const WARN_TOTAL_MB=10;
+const DANGER_TOTAL_MB=25;
 let promos=[];
 const $=id=>document.getElementById(id);
+
+/* IndexedDB (riusa il DB esistente listino_pro_db) */
+function openDb(){return new Promise((resolve,reject)=>{const req=indexedDB.open('listino_pro_db',1);req.onupgradeneeded=()=>req.result.createObjectStore('files');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
+async function idbSet(k,v){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
+async function idbGet(k){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction('files','readonly');const req=tx.objectStore('files').get(k);req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error);});}
+async function idbDel(k){const db=await openDb();return new Promise((res,rej)=>{const tx=db.transaction('files','readwrite');tx.objectStore('files').delete(k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
+
+/* Helpers */
 function today(){return new Date().toISOString().slice(0,10)}
 function uid(){return 'promo-'+Date.now()+'-'+Math.random().toString(36).slice(2,7)}
 function esc(s){return String(s??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;')}
+function isDataUri(s){return typeof s==='string' && s.startsWith('data:')}
+function dataUriBytes(s){
+  if(!isDataUri(s)) return 0;
+  const i=s.indexOf(',');
+  if(i<0) return 0;
+  const b64=s.slice(i+1);
+  const padding=(b64.match(/=+$/)||[''])[0].length;
+  return Math.floor(b64.length*3/4) - padding;
+}
+function fmtSize(bytes){
+  if(bytes<1024) return bytes+' B';
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+' KB';
+  return (bytes/(1024*1024)).toFixed(2)+' MB';
+}
+function detectTypeFromMime(mime){
+  if(!mime) return 'pdf';
+  if(mime.startsWith('image/')) return 'image';
+  if(mime==='application/pdf') return 'pdf';
+  return 'pdf';
+}
 function toIsoDate(v){
   if(!v) return '';
   const s=String(v).trim();
@@ -79,96 +163,256 @@ function toIsoDate(v){
 }
 function normalize(p={}){
   const url=p.url||p.file||p.href||'';
-  const type=p.type||((url||'').toLowerCase().endsWith('.pdf')?'pdf':'image');
+  const type=p.type||(isDataUri(url)?(url.startsWith('data:application/pdf')?'pdf':'image'):((url||'').toLowerCase().endsWith('.pdf')?'pdf':'image'));
   return {
     id:p.id||uid(),
     title:p.title||p.titolo||'',
     description:p.description||p.descrizione||'',
     url:url,
     type:type,
+    fileName:p.fileName||'',
+    fileMime:p.fileMime||'',
+    fileSize:typeof p.fileSize==='number'?p.fileSize:(isDataUri(url)?dataUriBytes(url):0),
     startsAt:toIsoDate(p.startsAt||p.start||p.validFrom||p.from||''),
     expiresAt:toIsoDate(p.expiresAt||p.expiry||p.validUntil||p.until||p.scadenza||''),
     active:p.active!==false,
     createdAt:toIsoDate(p.createdAt||p.created||today())||today()
   };
 }
-function saveDraft(){
-  localStorage.setItem(DRAFT_KEY, JSON.stringify(promos.map(normalize), null, 2));
-  $('saveState').innerHTML='<span class="pill">Salvato in locale</span> Scarica il JSON per pubblicarlo su GitHub.';
+
+/* Persistenza bozza in IndexedDB */
+async function saveDraft(){
+  const json=currentJson();
+  try{
+    await idbSet(DRAFT_KEY_IDB, json);
+    localStorage.removeItem(DRAFT_KEY_LEGACY);
+  }catch(e){
+    console.error('Errore salvataggio bozza in IndexedDB',e);
+    alert('Attenzione: il salvataggio in IndexedDB non è riuscito ('+e.message+'). Le modifiche potrebbero non persistere.');
+  }
+  $('saveState').innerHTML='<span class="pill">Salvato in locale</span> Scarica il JSON per pubblicarlo.';
+  updateSizeInfo();
   updatePreview();
 }
 function currentJson(){return JSON.stringify(promos.map(normalize),null,2)}
 function updatePreview(){if($('jsonPreview')) $('jsonPreview').textContent=currentJson();}
+function updateSizeInfo(){
+  const json=currentJson();
+  const totalBytes=new Blob([json]).size;
+  const totalMB=totalBytes/(1024*1024);
+  const numEmbedded=promos.filter(p=>isDataUri(p.url)).length;
+  const numUrls=promos.filter(p=>p.url && !isDataUri(p.url)).length;
+  let cls='';
+  if(totalMB>=DANGER_TOTAL_MB) cls='danger';
+  else if(totalMB>=WARN_TOTAL_MB) cls='warn';
+  const pct=Math.min(100, (totalMB/DANGER_TOTAL_MB)*100);
+  $('sizeInfo').innerHTML=`
+    <div><b>Dimensione promo.json:</b> ${fmtSize(totalBytes)} &middot; ${promos.length} promo (${numEmbedded} con file incorporato, ${numUrls} con URL/path)</div>
+    <div class="sizeBar ${cls}"><div style="width:${pct}%"></div></div>
+    ${cls==='danger'?'<div class="errbox" style="margin-top:6px">⚠️ Il file supera '+DANGER_TOTAL_MB+' MB: rischi rallentamenti, errori in fetch e problemi su mobile. Riduci o rimuovi qualche file incorporato.</div>':''}
+    ${cls==='warn'?'<div class="notice" style="margin-top:6px">⚠️ Il file ha superato i '+WARN_TOTAL_MB+' MB. Su mobile può iniziare a rallentare il caricamento delle promo.</div>':''}
+  `;
+}
+
+/* File upload → data URI */
+function fileToDataUri(file){
+  return new Promise((resolve,reject)=>{
+    const r=new FileReader();
+    r.onload=()=>resolve(r.result);
+    r.onerror=()=>reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+async function attachFileToPromo(i, file){
+  if(!file) return;
+  const sizeMB=file.size/(1024*1024);
+  if(sizeMB>MAX_FILE_MB){
+    alert(`Il file supera ${MAX_FILE_MB} MB (è ${sizeMB.toFixed(1)} MB). Per evitare un JSON troppo grande, comprimi il PDF o usa un'immagine più leggera.`);
+    return;
+  }
+  const okType = file.type==='application/pdf' || file.type.startsWith('image/');
+  if(!okType){
+    if(!confirm(`Tipo file "${file.type||'sconosciuto'}" non standard. Continuare comunque?`)) return;
+  }
+  try{
+    const dataUri=await fileToDataUri(file);
+    readInputsForRow(i);
+    promos[i].url=dataUri;
+    promos[i].type=detectTypeFromMime(file.type);
+    promos[i].fileName=file.name;
+    promos[i].fileMime=file.type;
+    promos[i].fileSize=file.size;
+    if(!promos[i].title) promos[i].title=file.name.replace(/\.(pdf|jpg|jpeg|png|webp|gif)$/i,'');
+    promos[i]=normalize(promos[i]);
+    await saveDraft();
+    render();
+  }catch(e){
+    alert('Errore lettura file: '+e.message);
+  }
+}
+function clearEmbeddedFile(i){
+  if(!confirm('Rimuovere il file incorporato? Il campo URL/path tornerà vuoto.')) return;
+  readInputsForRow(i);
+  promos[i].url='';
+  promos[i].fileName='';
+  promos[i].fileMime='';
+  promos[i].fileSize=0;
+  saveDraft().then(render);
+}
+
+/* Caricamento iniziale */
 async function loadFromGithub(){
   try{
     const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
     const data=await r.json();
     if(!Array.isArray(data)) throw new Error('Formato JSON non valido');
     promos=data.map(normalize);
-    saveDraft();
+    await saveDraft();
     render();
     alert('Promo ricaricate da GitHub e salvate come bozza locale.');
   }catch(e){alert('Non riesco a leggere promo/promo.json da GitHub. Puoi importare un JSON manualmente.');}
 }
 async function loadInitial(){
-  const draft=localStorage.getItem(DRAFT_KEY);
+  let draft=null;
+  try{ draft=await idbGet(DRAFT_KEY_IDB); }catch(e){console.warn('IDB read fail',e);}
   if(draft){
-    try{promos=JSON.parse(draft).map(normalize);render();return;}catch(e){localStorage.removeItem(DRAFT_KEY)}
+    try{promos=JSON.parse(draft).map(normalize);render();return;}catch(e){console.warn('IDB draft non parsabile',e);}
+  }
+  const legacy=localStorage.getItem(DRAFT_KEY_LEGACY);
+  if(legacy){
+    try{promos=JSON.parse(legacy).map(normalize);await saveDraft();render();return;}
+    catch(e){localStorage.removeItem(DRAFT_KEY_LEGACY);}
   }
   try{
     const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
     const data=await r.json();
     promos=Array.isArray(data)?data.map(normalize):[];
-    saveDraft();
+    await saveDraft();
   }catch(e){promos=[];alert('Non riesco a leggere promo/promo.json. Puoi importare o creare un nuovo JSON.');}
   render();
 }
+
+/* Lettura input */
 function readInputsForRow(i){
   document.querySelectorAll(`[data-i="${i}"]`).forEach(inp=>{
+    if(inp.type==='file') return;
+    if(inp.disabled) return;
     promos[i][inp.dataset.f]=inp.type==='checkbox'?inp.checked:inp.value.trim();
   });
   promos[i]=normalize(promos[i]);
 }
+
+/* Render */
 function render(){
-  $('rows').innerHTML=promos.map((p0,i)=>{const p=normalize(p0);promos[i]=p;return `<div class="row">
-    <div class="grid"><label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label><label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"></label></div>
-    <div class="grid"><label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"></label><label>Tipo<select data-i="${i}" data-f="type"><option value="pdf" ${p.type==='pdf'?'selected':''}>PDF</option><option value="image" ${p.type==='image'?'selected':''}>Immagine</option></select></label></div>
-    <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
-    <div class="grid"><label>File / URL<input data-i="${i}" data-f="url" value="${esc(p.url)}"></label><label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label></div>
-    <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'}</div>
-    <div class="actions"><button data-save="${i}">Salva riga</button><button class="${p.active?'danger':'ok'}" data-toggle="${i}">${p.active?'Disattiva':'Riattiva'}</button><button class="danger" data-del="${i}">Elimina dal JSON</button></div>
-  </div>`}).join('') || '<div class="small">Nessuna promo presente.</div>';
+  $('rows').innerHTML=promos.map((p0,i)=>{
+    const p=normalize(p0);promos[i]=p;
+    const embedded=isDataUri(p.url);
+    const hasUrl=p.url && !embedded;
+    const fileBlock = embedded
+      ? `<div class="fileBox has-file">
+           <div class="fileInfo">
+             <div class="fileMeta">
+               <span class="pill embedded">FILE INCORPORATO</span>
+               &nbsp;<b>${esc(p.fileName||'(nome non disponibile)')}</b>
+               <div class="small" style="margin-top:4px">Tipo: ${esc(p.fileMime||p.type)} &middot; Dimensione: ${fmtSize(p.fileSize||dataUriBytes(p.url))}</div>
+             </div>
+             <button class="danger" data-clear-file="${i}" type="button">Rimuovi file</button>
+           </div>
+           <div class="small">Per sostituirlo, scegli un nuovo file qui sotto.</div>
+           <input type="file" data-upload="${i}" accept="application/pdf,image/*">
+         </div>`
+      : `<div class="fileBox">
+           <div class="fileMeta"><b>Carica un file PDF o un'immagine</b> per incorporarlo nel JSON, oppure inserisci un URL/path qui sotto.</div>
+           <input type="file" data-upload="${i}" accept="application/pdf,image/*">
+           <div class="small">Max ${MAX_FILE_MB} MB per file. Verrà incluso in promo.json come base64.</div>
+         </div>`;
+    const urlBlock = embedded
+      ? `<input data-i="${i}" data-f="url" value="${esc(p.url.slice(0,80))}…" disabled style="background:#f3f4f6;color:#9ca3af">`
+      : `<input data-i="${i}" data-f="url" value="${esc(p.url)}" placeholder="es. promo/file.pdf oppure https://...">`;
+    return `<div class="row">
+      <div class="grid">
+        <label>Titolo<input data-i="${i}" data-f="title" value="${esc(p.title)}"></label>
+        <label>Tipo
+          <select data-i="${i}" data-f="type">
+            <option value="pdf" ${p.type==='pdf'?'selected':''}>PDF</option>
+            <option value="image" ${p.type==='image'?'selected':''}>Immagine</option>
+          </select>
+        </label>
+      </div>
+      <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
+      ${fileBlock}
+      <div class="grid">
+        <label>${embedded?'URL (gestito automaticamente)':'File / URL / path'}${urlBlock}</label>
+        <label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label>
+      </div>
+      <div class="grid">
+        <label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"></label>
+        <label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"></label>
+      </div>
+      <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'} ${embedded?' &middot; <span class="pill embedded">file embedded</span>':(hasUrl?' &middot; <span class="pill url">URL/path esterno</span>':' &middot; <span class="pill warn">nessun file</span>')}</div>
+      <div class="actions">
+        <button data-save="${i}">Salva riga</button>
+        <button class="${p.active?'danger':'ok'}" data-toggle="${i}">${p.active?'Disattiva':'Riattiva'}</button>
+        <button class="danger" data-del="${i}">Elimina dal JSON</button>
+      </div>
+    </div>`;
+  }).join('') || '<div class="small">Nessuna promo presente. Usa "Aggiungi riga promo" qui sotto.</div>';
 
   document.querySelectorAll('[data-i]').forEach(el=>{
+    if(el.type==='file') return;
+    if(el.disabled) return;
     el.oninput=()=>{const i=+el.dataset.i;readInputsForRow(i);saveDraft();};
     el.onchange=()=>{const i=+el.dataset.i;readInputsForRow(i);saveDraft();};
   });
-  document.querySelectorAll('[data-save]').forEach(b=>b.onclick=()=>{const i=+b.dataset.save;readInputsForRow(i);saveDraft();render();alert('Riga salvata nella bozza locale. Ora scarica promo.json per pubblicarla.');});
-  document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>{const i=+b.dataset.toggle;readInputsForRow(i);promos[i].active=!promos[i].active;saveDraft();render();});
-  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{const i=+b.dataset.del;if(confirm('Eliminare questa promo dal JSON?')){promos.splice(i,1);saveDraft();render();}});
+  document.querySelectorAll('[data-upload]').forEach(inp=>{
+    inp.onchange=()=>{
+      const i=+inp.dataset.upload;
+      const f=inp.files && inp.files[0];
+      if(f) attachFileToPromo(i,f);
+    };
+  });
+  document.querySelectorAll('[data-clear-file]').forEach(b=>{
+    b.onclick=()=>clearEmbeddedFile(+b.dataset.clearFile);
+  });
+  document.querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.save;readInputsForRow(i);await saveDraft();render();alert('Riga salvata nella bozza locale. Ora scarica promo.json per pubblicarla.');});
+  document.querySelectorAll('[data-toggle]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.toggle;readInputsForRow(i);promos[i].active=!promos[i].active;await saveDraft();render();});
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{const i=+b.dataset.del;if(confirm('Eliminare questa promo dal JSON?')){promos.splice(i,1);await saveDraft();render();}});
   updatePreview();
+  updateSizeInfo();
 }
-function downloadJson(){
-  saveDraft();
+
+/* Download / import */
+async function downloadJson(){
+  await saveDraft();
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([currentJson()],{type:'application/json'}));
   a.download='promo.json';
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
 }
-function importData(data){
+async function importData(data){
   if(!Array.isArray(data)) throw new Error('Il JSON deve essere una lista/array di promo');
   promos=data.map(normalize);
-  saveDraft();render();alert('JSON importato e salvato come bozza locale.');
+  await saveDraft();render();alert('JSON importato e salvato come bozza locale.');
 }
+
+/* UI binding */
 $('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');loadInitial();};
+$('pass').addEventListener('keydown',e=>{if(e.key==='Enter') $('unlock').click();});
 $('reload').onclick=()=>{if(confirm('Ricaricare da GitHub? La bozza locale verrà sostituita.')) loadFromGithub();};
 $('download').onclick=downloadJson;
-$('copy').onclick=async()=>{saveDraft();await navigator.clipboard.writeText(currentJson());alert('JSON copiato');};
-$('add').onclick=()=>{promos.push(normalize({id:uid(),title:'Nuova promo',description:'',url:'promo/nuova-promo.pdf',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()}));saveDraft();render();};
-$('clearDraft').onclick=()=>{if(confirm('Cancellare la bozza locale? Poi puoi ricaricare da GitHub o importare un JSON.')){localStorage.removeItem(DRAFT_KEY);promos=[];render();$('saveState').innerHTML='<span class="pill">Bozza locale cancellata</span>';}};
-$('importJson').onclick=async()=>{const f=$('jsonFile').files[0];if(!f){alert('Seleziona prima un file promo.json');return;}try{importData(JSON.parse(await f.text()));}catch(e){alert('JSON non valido: '+e.message)}};
-$('importText').onclick=()=>{try{importData(JSON.parse($('pasteJson').value));}catch(e){alert('JSON non valido: '+e.message)}};
+$('copy').onclick=async()=>{await saveDraft();await navigator.clipboard.writeText(currentJson());alert('JSON copiato');};
+$('add').onclick=async()=>{promos.push(normalize({id:uid(),title:'Nuova promo',description:'',url:'',type:'pdf',startsAt:today(),expiresAt:today(),active:true,createdAt:today()}));await saveDraft();render();};
+$('clearDraft').onclick=async()=>{
+  if(confirm('Cancellare la bozza locale? Poi puoi ricaricare da GitHub o importare un JSON.')){
+    try{ await idbDel(DRAFT_KEY_IDB); }catch(e){console.warn(e);}
+    localStorage.removeItem(DRAFT_KEY_LEGACY);
+    promos=[];render();
+    $('saveState').innerHTML='<span class="pill">Bozza locale cancellata</span>';
+  }
+};
+$('importJson').onclick=async()=>{const f=$('jsonFile').files[0];if(!f){alert('Seleziona prima un file promo.json');return;}try{await importData(JSON.parse(await f.text()));}catch(e){alert('JSON non valido: '+e.message)}};
+$('importText').onclick=async()=>{try{await importData(JSON.parse($('pasteJson').value));}catch(e){alert('JSON non valido: '+e.message)}};
 </script>
 </body>
 </html>
