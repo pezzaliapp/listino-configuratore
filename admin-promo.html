@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com data: blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
 <title>Admin Promo - Configuratore Listino PRO</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
 :root{--bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#111827;--danger:#991b1b;--ok:#166534;--blue:#1d4ed8}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
@@ -70,16 +74,14 @@ details.ghPanel .ghBody{padding:0 16px 16px;display:grid;gap:10px}
     <p>Carica direttamente PDF o immagini delle promo: vengono <b>incorporate dentro promo.json</b>. Pubblichi su GitHub un solo file e tutti gli utenti vedono le promo aggiornate, senza dover caricare i PDF nella cartella <b>promo/</b>.</p>
   </section>
 
-  <section class="panel" id="loginPanel">
-    <div class="head"><h2>Accesso amministratore</h2></div>
-    <div class="body">
-      <input id="pass" type="password" placeholder="Password admin">
-      <button id="unlock">Entra</button>
-      <div class="small">Password predefinita: <b>admin</b>. Puoi cambiarla dentro questo file. Senza backend non è una protezione server reale.</div>
-    </div>
-  </section>
+  <div class="notice" style="border-radius:18px;margin-bottom:16px">
+    <b>⚠️ Pannello admin pubblicamente accessibile.</b>
+    La protezione effettiva è il <b>Personal Access Token GitHub</b>, salvato solo su questo dispositivo (IndexedDB).
+    Chiunque può aprire questa pagina, ma senza il tuo token non può pubblicare nulla.
+    <b>Se questo dispositivo viene compromesso, revoca subito il token su GitHub</b> (Settings → Developer settings → Personal access tokens).
+  </div>
 
-  <section class="panel hide" id="adminPanel">
+  <section class="panel" id="adminPanel">
     <div class="head">
       <h2>Promo nel file promo.json</h2>
       <div class="actions">
@@ -163,14 +165,17 @@ details.ghPanel .ghBody{padding:0 16px 16px;display:grid;gap:10px}
 </div>
 
 <script>
-const ADMIN_PASSWORD='admin';
 const DRAFT_KEY_LEGACY='listino_promo_admin_draft_v2';
 const DRAFT_KEY_IDB='listino_promo_admin_draft_v3';
 const GH_CONFIG_KEY='listino_promo_admin_gh_config_v1';
 const GH_SHA_KEY='listino_promo_admin_gh_sha_v1';
+const BACKUP_KEY_PREFIX='listino_promo_admin_backup_';
+const MAX_BACKUPS=5;
+const TOKEN_AGE_WARN_DAYS=60;
 const MAX_FILE_MB=8;
 const WARN_TOTAL_MB=10;
 const DANGER_TOTAL_MB=25;
+const ALLOWED_MIME=new Set(['application/pdf','image/jpeg','image/png','image/webp','image/gif']);
 let promos=[];
 const $=id=>document.getElementById(id);
 
@@ -293,9 +298,10 @@ async function attachFileToPromo(i, file){
     alert(`Il file supera ${MAX_FILE_MB} MB (è ${sizeMB.toFixed(1)} MB). Per evitare un JSON troppo grande, comprimi il PDF o usa un'immagine più leggera.`);
     return;
   }
-  const okType = file.type==='application/pdf' || file.type.startsWith('image/');
-  if(!okType){
-    if(!confirm(`Tipo file "${file.type||'sconosciuto'}" non standard. Continuare comunque?`)) return;
+  // Whitelist esplicita: niente image/* generico (blocca svg+xml e formati esotici).
+  if(!ALLOWED_MIME.has(file.type)){
+    alert(`Tipo file "${file.type||'sconosciuto'}" non supportato. Usa PDF, JPG, PNG, WebP o GIF.`);
+    return;
   }
   try{
     const dataUri=await fileToDataUri(file);
@@ -359,7 +365,7 @@ async function loadFromGithub(){
   }
   // Fallback: fetch del file pubblicato (senza sha)
   try{
-    const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
+    const r=await fetch('./promo/promo.json',{cache:'no-store'});
     const data=await r.json();
     if(!Array.isArray(data)) throw new Error('Formato JSON non valido');
     promos=data.map(normalize);
@@ -380,7 +386,7 @@ async function loadInitial(){
     catch(e){localStorage.removeItem(DRAFT_KEY_LEGACY);}
   }
   try{
-    const r=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
+    const r=await fetch('./promo/promo.json',{cache:'no-store'});
     const data=await r.json();
     promos=Array.isArray(data)?data.map(normalize):[];
     await saveDraft();
@@ -501,6 +507,9 @@ async function ghGetConfig(){
   }catch(e){console.warn('Errore lettura config GH',e);return {owner:'',repo:'',branch:'main',path:'promo/promo.json',token:''};}
 }
 async function ghSetConfig(cfg){
+  // Salva createdAt al primo set/cambio token così possiamo avvisare quando il token invecchia.
+  const prev=await ghGetConfig();
+  if(!cfg.tokenSavedAt || (prev.token!==cfg.token)) cfg.tokenSavedAt=new Date().toISOString();
   await idbSet(GH_CONFIG_KEY, JSON.stringify(cfg));
 }
 async function ghGetSavedSha(){
@@ -536,6 +545,13 @@ async function loadGhConfigToUI(){
 function refreshGhSummary(cfg){
   if(cfg && cfg.token && cfg.owner && cfg.repo){
     setGhStatus('ok', `${cfg.owner}/${cfg.repo}@${cfg.branch||'main'} configurato`);
+    // Avviso età token: se è stato salvato da più di TOKEN_AGE_WARN_DAYS giorni, suggerisci rinnovo.
+    if(cfg.tokenSavedAt){
+      const days=Math.floor((Date.now()-Date.parse(cfg.tokenSavedAt))/86400000);
+      if(days>=TOKEN_AGE_WARN_DAYS){
+        setGhResult(`⚠️ Il token è salvato su questo dispositivo da ${days} giorni. Verifica la scadenza su GitHub e, se vicina, rigenera il token.`,'');
+      }
+    }
   }else{
     setGhStatus('warn', 'Non configurato — clicca per impostare');
   }
@@ -589,6 +605,27 @@ async function ghClearToken(){
   setGhResult('Configurazione rimossa.','ok');
   setGhStatus('warn','Non configurato');
 }
+async function backupCurrentDraft(reason){
+  // Snapshot della bozza corrente in IndexedDB con timestamp. Mantiene gli ultimi MAX_BACKUPS.
+  try{
+    const ts=new Date().toISOString();
+    await idbSet(BACKUP_KEY_PREFIX+ts, JSON.stringify({reason:reason||'manual', json:currentJson(), at:ts}));
+    // Pulizia: tieni solo gli ultimi MAX_BACKUPS.
+    const db=await openDb();
+    await new Promise((res,rej)=>{
+      const tx=db.transaction('files','readwrite');
+      const store=tx.objectStore('files');
+      const req=store.getAllKeys();
+      req.onsuccess=()=>{
+        const keys=(req.result||[]).filter(k=>typeof k==='string'&&k.startsWith(BACKUP_KEY_PREFIX)).sort();
+        const toDelete=keys.slice(0,Math.max(0,keys.length-MAX_BACKUPS));
+        toDelete.forEach(k=>store.delete(k));
+      };
+      tx.oncomplete=()=>res();
+      tx.onerror=()=>rej(tx.error);
+    });
+  }catch(e){console.warn('Backup non riuscito',e);}
+}
 async function ghPublish(){
   const cfg=await ghGetConfig();
   if(!cfg.token||!cfg.owner||!cfg.repo){
@@ -598,6 +635,8 @@ async function ghPublish(){
     return;
   }
   await saveDraft();
+  // Backup automatico prima di ogni publish: in caso di 409 o errori, la bozza locale è salva.
+  await backupCurrentDraft('pre-publish');
   const json=currentJson();
   const totalMB=new Blob([json]).size/(1024*1024);
   if(totalMB>=DANGER_TOTAL_MB){
@@ -646,7 +685,7 @@ async function ghPublish(){
       const errData=await rPut.json().catch(()=>({}));
       const msg=errData.message||'';
       if(/sha/i.test(msg)||rPut.status===409){
-        alert('⚠️ Conflitto: qualcun altro ha aggiornato promo.json mentre stavi lavorando.\n\nPremi "Ricarica da GitHub" (perderai le modifiche locali, oppure scarica prima un backup), poi rifai le modifiche e ripubblica.');
+        alert('⚠️ Conflitto: qualcun altro ha aggiornato promo.json mentre stavi lavorando.\n\nLa tua bozza è stata salvata automaticamente come backup (in IndexedDB, chiave listino_promo_admin_backup_*). Premi "Ricarica da GitHub", poi reinserisci le tue modifiche e ripubblica.');
       }else{
         alert(`Errore validazione (${rPut.status}): ${msg}`);
       }
@@ -666,9 +705,7 @@ async function ghPublish(){
   }
 }
 
-/* UI binding */
-$('unlock').onclick=()=>{if($('pass').value!==ADMIN_PASSWORD){alert('Password non corretta');return}$('loginPanel').classList.add('hide');$('adminPanel').classList.remove('hide');loadInitial();loadGhConfigToUI();};
-$('pass').addEventListener('keydown',e=>{if(e.key==='Enter') $('unlock').click();});
+/* UI binding — niente login: il pannello è pubblicamente accessibile, la protezione effettiva è il PAT. */
 $('reload').onclick=()=>{if(confirm('Ricaricare da GitHub? La bozza locale verrà sostituita.')) loadFromGithub();};
 $('download').onclick=downloadJson;
 $('publish').onclick=ghPublish;
@@ -687,6 +724,10 @@ $('clearDraft').onclick=async()=>{
 };
 $('importJson').onclick=async()=>{const f=$('jsonFile').files[0];if(!f){alert('Seleziona prima un file promo.json');return;}try{await importData(JSON.parse(await f.text()));}catch(e){alert('JSON non valido: '+e.message)}};
 $('importText').onclick=async()=>{try{await importData(JSON.parse($('pasteJson').value));}catch(e){alert('JSON non valido: '+e.message)}};
+
+/* Avvio automatico: il pannello è sempre visibile (niente login). Il PAT GitHub è la protezione effettiva. */
+loadInitial();
+loadGhConfigToUI();
 </script>
 </body>
 </html>
