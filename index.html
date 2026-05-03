@@ -34,7 +34,7 @@ button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line
 .fileLabel input{display:none}
 .status{margin-top:10px;color:#e5e7eb;font-size:14px}
 .notice{padding:14px 18px;background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;font-size:14px;margin-top:0}
-.grid{display:grid;grid-template-columns:1fr 390px;gap:18px;margin-top:18px}
+.grid{display:grid;grid-template-columns:1fr 390px;gap:18px;margin-top:18px;align-items:start}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:0 10px 25px rgba(15,23,42,.05);overflow:hidden}
 .panelHead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;justify-content:space-between}
 .panelHead h2{font-size:18px;margin:0}
@@ -43,7 +43,7 @@ button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line
 .chips{display:flex;gap:8px;flex-wrap:wrap;padding:0 18px 14px}
 .chip{border:1px solid var(--line);background:#fff;color:#374151;border-radius:999px;padding:8px 11px;font-size:13px;font-weight:750}
 .chip.active{background:#111827;color:white;border-color:#111827}
-.tableWrap{overflow:auto;max-height:calc(100vh - 335px)}
+.tableWrap{overflow:visible}
 table{width:100%;border-collapse:separate;border-spacing:0}
 th{position:sticky;top:0;background:#f9fafb;z-index:1;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;border-bottom:1px solid var(--line);padding:10px}
 td{border-bottom:1px solid var(--line);padding:11px 10px;vertical-align:top}
@@ -51,9 +51,16 @@ tr:hover td{background:#fafafa}
 .code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-weight:850}
 .price{text-align:right;font-weight:850;white-space:nowrap}
 .small{font-size:12px;color:var(--muted)}
-.addBtn{padding:8px 10px;border-radius:11px}
+.addBtn{padding:8px 10px;border-radius:11px;transition:background .2s,color .2s}
+.btn-aggiunto{background:#10b981!important;color:#fff!important}
+.rowInQuote{border-left:3px solid #10b981}
+.mobileCard.rowInQuote{border-left:3px solid #10b981}
+.inQuoteBadge{display:inline-block;background:#ecfdf5;color:#047857;padding:2px 8px;border-radius:6px;font-size:11.5px;font-weight:600;margin-left:8px;line-height:1.4;vertical-align:middle;white-space:nowrap}
+@keyframes pulseBox{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+.pulse-once{animation:pulseBox .3s ease-out}
+@media(prefers-reduced-motion:reduce){.pulse-once{animation:none}.addBtn,.btn-aggiunto{transition:none}}
 .empty{padding:32px;text-align:center;color:var(--muted)}
-.side{display:flex;flex-direction:column;gap:18px}
+.side{display:flex;flex-direction:column;gap:18px;position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow-y:auto}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px}
 .kpi{background:#f9fafb;border:1px solid var(--line);border-radius:18px;padding:13px}
 .kpi b{font-size:22px;display:block}
@@ -74,7 +81,7 @@ tr:hover td{background:#fafafa}
 .modalActions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:16px}
 @media(max-width:980px){
   .hero,.grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.tableWrap{max-height:none}
-  .side{order:-1}.app{padding:10px}.hero{border-radius:22px;padding:18px}
+  .side{order:-1;position:static;max-height:none;overflow-y:visible}.app{padding:10px}.hero{border-radius:22px;padding:18px}
   td:nth-child(4),th:nth-child(4),td:nth-child(5),th:nth-child(5){display:none}.actions{grid-template-columns:1fr}
 }
 @media(max-width:560px){
@@ -237,7 +244,7 @@ tr:hover td{background:#fafafa}
           <input class="quoteInput" id="markup" type="number" step="0.1" placeholder="Ricarico %">
         </div>
         <div id="quoteList" class="quoteList"><div class="empty">Nessun articolo selezionato.</div></div>
-        <div class="totals">
+        <div class="totals" id="totalsBox">
           <div class="totalLine"><span>Lordo</span><b id="gross">€ 0,00</b></div>
           <div class="totalLine"><span>Sconto</span><b id="discVal">€ 0,00</b></div>
           <div class="totalLine"><span>Ricarico</span><b id="markVal">€ 0,00</b></div>
@@ -384,11 +391,57 @@ function applyFilters(){
   );
   renderTable(); updateKpi();
 }
+function flashAddBtn(btn){
+  if(!btn) return;
+  btn.disabled=true;
+  btn.classList.add('btn-aggiunto');
+  if(!btn.dataset.origText) btn.dataset.origText=btn.textContent;
+  btn.textContent='✓ Aggiunto';
+  setTimeout(()=>{
+    btn.disabled=false;
+    btn.classList.remove('btn-aggiunto');
+    btn.textContent=btn.dataset.origText||'Aggiungi';
+  },1200);
+}
+function pulseTotale(){
+  const box=document.getElementById('totalsBox');
+  if(!box) return;
+  box.classList.remove('pulse-once');
+  void box.offsetWidth; // forza reflow per riavviare l'animazione se è già stata applicata
+  box.classList.add('pulse-once');
+  setTimeout(()=>box.classList.remove('pulse-once'),350);
+}
+function refreshQuoteBadges(){
+  // Marca le righe del listino già presenti nel preventivo: bordo sinistro verde
+  // + badge "Nel preventivo (×N)" accanto al codice.
+  document.querySelectorAll('#tbody tr [data-id], #mobileCards [data-id]').forEach(btn=>{
+    const id=Number(btn.dataset.id);
+    const inQuote=quote.find(q=>q.id===id);
+    const row=btn.closest('tr,.mobileCard');
+    if(!row) return;
+    let codeCell=row.querySelector('.code, .mobileCode');
+    let badge=codeCell?codeCell.querySelector('.inQuoteBadge'):null;
+    if(inQuote){
+      row.classList.add('rowInQuote');
+      if(!badge && codeCell){
+        badge=document.createElement('span');
+        badge.className='inQuoteBadge';
+        codeCell.appendChild(badge);
+      }
+      if(badge) badge.textContent=`Nel preventivo (×${inQuote.qta})`;
+    }else{
+      row.classList.remove('rowInQuote');
+      if(badge) badge.remove();
+    }
+  });
+}
 function bindArticleButtons(scope){
   scope.querySelectorAll('[data-id]').forEach(b=>b.onclick=()=>{
     const id=Number(b.dataset.id);
     const qtyInput=scope.querySelector(`[data-addqty="${id}"]`);
     addQuote(id, qtyInput ? Number(qtyInput.value)||1 : 1);
+    flashAddBtn(b);
+    pulseTotale();
   });
   scope.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>openPdfAtPage(Number(b.dataset.page)));
 }
@@ -413,6 +466,7 @@ function renderMobileCards(){
     </article>`;
   }).join('');
   bindArticleButtons(els.mobileCards);
+  refreshQuoteBadges();
 }
 function renderTable(){
   if(!rows.length){els.tbody.innerHTML='<tr><td colspan="6" class="empty">Carica un file Excel o CSV per iniziare.</td></tr>';renderMobileCards();return;}
@@ -427,6 +481,7 @@ function renderTable(){
   </tr>`).join('');
   bindArticleButtons(els.tbody);
   renderMobileCards();
+  refreshQuoteBadges();
 }
 function updateKpi(){
   els.kArt.textContent=filtered.length || rows.length;
@@ -452,6 +507,7 @@ function renderQuote(){
     els.quoteList.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{quote=quote.filter(q=>q.id!=b.dataset.del);save();renderQuote();});
   }
   calcTotals();
+  refreshQuoteBadges();
 }
 function calcTotals(){
   const gross=quote.reduce((s,x)=>s+x.prezzo*x.qta,0),d=Number(els.discount.value)||0,m=Number(els.markup.value)||0;
@@ -499,6 +555,10 @@ function isDataUri(s){return typeof s==='string' && s.startsWith('data:');}
 // quindi non leggiamo da location.href (può contenere www. se la PWA è stata installata
 // da quell'host) ma usiamo un URL hardcoded e sempre valido.
 const APP_URL='https://alessandropezzali.it/listino-configuratore/';
+// iOS Safari in PWA standalone: navigator.standalone===true.
+// In quel contesto window.open / target="_blank" portano fuori dalla PWA e lo
+// stato dell'app risulta "rotto" al rientro. Per le promo apriamo allora il modal in-app.
+const isStandaloneIOS = window.navigator.standalone === true;
 const PROMO_DISCLAIMER='Prezzi netti riservati al rivenditore. Non includono IVA 22%, trasporto EX WORK, installazione. Non destinati al cliente finale.';
 function promoWhatsAppText(p){
   const u=promoUrl(p);
@@ -522,10 +582,10 @@ function renderPromos(promos){
     return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><button class="open" type="button" data-promo-open="${escapeHtml(id)}">Apri promo</button><button class="wa" type="button" data-promo-wa="${escapeHtml(id)}">WhatsApp</button></div></article>`;
   }).join('');
   // Apri promo:
-  //   - URL/path normali (es. "promo/file.pdf"): window.open in nuova scheda (funziona OK su iOS).
-  //   - data URI (file embedded in promo.json): modal in-app.
-  // Motivo del modal: Safari iOS in PWA standalone blocca window.open anche con user gesture
-  // sincrono per i popup verso about:blank/blob:. Il modal interno evita del tutto il popup.
+  //   - data URI (file embedded in promo.json): modal in-app, sempre.
+  //   - PWA standalone su iPhone: modal in-app anche per path GitHub (window.open
+  //     porterebbe fuori dalla PWA e lo stato dell'app rimane inconsistente al rientro).
+  //   - tutto il resto (desktop, Android, Safari iOS non-standalone): window.open.
   els.promoList.querySelectorAll('[data-promo-open]').forEach(btn=>btn.onclick=()=>{
     const p=visible.find(x=>promoId(x)===btn.dataset.promoOpen);
     if(!p) return;
@@ -535,6 +595,10 @@ function renderPromos(promos){
       // Validazione difensiva: rifiuta data URI di tipo eseguibile/markup (svg+xml, html, ecc.).
       const okPrefix=/^data:(application\/pdf|image\/(jpeg|png|webp|gif));/i.test(url);
       if(!okPrefix){alert('Tipo di file promo non supportato per l\'apertura sicura.');return;}
+      openPromoModal(p);
+      return;
+    }
+    if(isStandaloneIOS){
       openPromoModal(p);
       return;
     }
@@ -681,6 +745,9 @@ const promoEls={
 let promoPdfDoc=null;
 let promoCurrentPage=1;
 let currentPromo=null;
+// Blob URL creato per promo con path (non data:): va revocato alla chiusura del modal
+// per non lasciare riferimenti pendenti in memoria.
+let promoBlobUrl=null;
 
 function closePromoModal(){
   promoEls.modal.classList.add('hide');
@@ -693,6 +760,10 @@ function closePromoModal(){
   promoPdfDoc=null;
   promoCurrentPage=1;
   currentPromo=null;
+  if(promoBlobUrl){
+    URL.revokeObjectURL(promoBlobUrl);
+    promoBlobUrl=null;
+  }
 }
 async function renderPromoPdfPage(n){
   if(!promoPdfDoc) return;
@@ -715,42 +786,76 @@ async function renderPromoPdfPage(n){
   promoEls.prev.disabled=promoCurrentPage<=1;
   promoEls.next.disabled=promoCurrentPage>=promoPdfDoc.numPages;
 }
+// Determina il "kind" della promo: 'image' | 'pdf' | null.
+// Priorità: prefisso data: > p.type esplicito > estensione del path.
+function detectPromoKind(p){
+  const url=(p&&p.url)||'';
+  if(/^data:image\//i.test(url)) return 'image';
+  if(/^data:application\/pdf/i.test(url)) return 'pdf';
+  if(p && p.type==='image') return 'image';
+  if(p && p.type==='pdf') return 'pdf';
+  if(/\.(jpe?g|png|webp|gif)(\?|#|$)/i.test(url)) return 'image';
+  if(/\.pdf(\?|#|$)/i.test(url)) return 'pdf';
+  return null;
+}
 async function openPromoModal(p){
   currentPromo=p;
   promoEls.title.textContent=p.title||'Promo';
   promoEls.modal.classList.remove('hide');
   promoEls.modal.setAttribute('aria-hidden','false');
   const url=p.url||'';
-  if(url.startsWith('data:image/')){
-    promoEls.img.src=url;
+  const kind=detectPromoKind(p);
+  if(!kind){
+    alert('Formato promo non supportato.');
+    closePromoModal();
+    return;
+  }
+  // Per i path (non data URI) carichiamo via fetch e usiamo un blob URL: garantisce
+  // che il file sia accessibile sia per <img src> che per pdf.js anche dentro la PWA
+  // standalone, dove window.open verso path GitHub è proibito.
+  let displayUrl=url;
+  if(!url.startsWith('data:')){
+    try{
+      const r=await fetch(url);
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      const blob=await r.blob();
+      promoBlobUrl=URL.createObjectURL(blob);
+      displayUrl=promoBlobUrl;
+    }catch(e){
+      console.error(e);
+      alert('Errore caricamento promo: '+e.message);
+      closePromoModal();
+      return;
+    }
+  }
+  if(kind==='image'){
+    promoEls.img.src=displayUrl;
     promoEls.img.classList.remove('hide');
     promoEls.canvas.classList.add('hide');
     [promoEls.prev,promoEls.next,promoEls.nav].forEach(e=>e.classList.add('hide'));
     promoEls.hint.classList.remove('hide');
-  }else if(url.startsWith('data:application/pdf')){
-    if(!window.pdfjsLib){
-      alert('Viewer PDF non caricato. Apri la app una volta con internet attivo.');
-      closePromoModal();return;
-    }
-    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-    try{
-      const r=await fetch(url);
-      const buf=await r.arrayBuffer();
-      promoPdfDoc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
-      promoEls.canvas.classList.remove('hide');
-      promoEls.img.classList.add('hide');
-      promoEls.hint.classList.add('hide');
-      promoEls.pageTotal.textContent='/ '+promoPdfDoc.numPages;
-      const showNav=promoPdfDoc.numPages>1;
-      [promoEls.prev,promoEls.next,promoEls.nav].forEach(e=>e.classList.toggle('hide',!showNav));
-      await renderPromoPdfPage(1);
-    }catch(e){
-      console.error(e);
-      alert('Errore caricamento PDF: '+e.message);
-      closePromoModal();
-    }
-  }else{
-    alert('Formato promo non supportato.');
+    return;
+  }
+  // kind === 'pdf'
+  if(!window.pdfjsLib){
+    alert('Viewer PDF non caricato. Apri la app una volta con internet attivo.');
+    closePromoModal();return;
+  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  try{
+    const r=await fetch(displayUrl);
+    const buf=await r.arrayBuffer();
+    promoPdfDoc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+    promoEls.canvas.classList.remove('hide');
+    promoEls.img.classList.add('hide');
+    promoEls.hint.classList.add('hide');
+    promoEls.pageTotal.textContent='/ '+promoPdfDoc.numPages;
+    const showNav=promoPdfDoc.numPages>1;
+    [promoEls.prev,promoEls.next,promoEls.nav].forEach(e=>e.classList.toggle('hide',!showNav));
+    await renderPromoPdfPage(1);
+  }catch(e){
+    console.error(e);
+    alert('Errore caricamento PDF: '+e.message);
     closePromoModal();
   }
 }
