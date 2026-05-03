@@ -1,4 +1,4 @@
-const CACHE='listino-configuratore-pro-promo-embedded-v15';
+const CACHE='listino-configuratore-pro-promo-embedded-v16';
 const ASSETS=['./','./index.html','./admin-promo.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',e=>{
