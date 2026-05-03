@@ -937,4 +937,60 @@ Il merge sequenziale è quello consigliato: prima `audit-fixes` (Group A+B), poi
 
 ---
 
+## 11. Group C → A1 implementato — refactor data URI → file binari
+
+**Data:** 2026-05-03 (tardo pomeriggio)
+**Branch:** `refactor-upload-binari` (parte da `main` con i fix audit + popup-v2 + WhatsApp-canonical-url già mergiati)
+**Triggered by:** condivisione WhatsApp di una promo embedded portava all'home dell'app, non al file (perché il file non aveva URL pubblico).
+
+### Cosa è cambiato
+
+**Prima:** quando l'admin caricava un PDF/immagine, il file diventava un `data:base64,...` dentro il campo `url` di `promo.json`. JSON poteva crescere a MB. Il file non aveva un URL pubblico cliccabile.
+
+**Ora:** quando l'admin carica un file:
+1. Il binario viene **immediatamente pushato** su `promo/<slug>-<timestamp>.<ext>` via GitHub Contents API (un commit dedicato).
+2. Il `url` della promo nel JSON locale diventa il path (es. `promo/prevendita-b-300-1762345678901.pdf`).
+3. Quando l'admin preme **Pubblica**, viene committato solo il `promo.json` aggiornato.
+
+Risultato: ogni promo ha un URL pubblico cliccabile su `alessandropezzali.it/listino-configuratore/promo/<file>`. Condivisione WhatsApp porta direttamente al file, non più all'app.
+
+### Modifiche tecniche
+
+`admin-promo.html`:
+
+- **Helpers nuovi:** `slugify`, `randomSuffix`, `buildPromoFilename`, `fileToBase64`, `ghPutBinary`, `uploadPromoBinary`.
+- **`attachFileToPromo` riscritta:** transazionale (PUT binario fallisce → JSON locale invariato), progress UI nel `saveState`, error handling con dettagli API GitHub.
+- **`render()` aggiornata:** distingue 4 stati per la UI del fileBox: `data:` URI legacy (pill warn) / file GitHub managed (pill embedded) / URL/path manuale (pill url) / vuoto.
+- **Counter `binariesUploadedThisSession`:** traccia upload nella sessione corrente, mostrato nel summary post-publish, resettato al publish riuscito.
+- **Pulsante "Migra embedded → file GitHub":** loop sequenziale sulle promo `data:` URI nel JSON corrente, ognuna estratta come blob, validata MIME, pushata come binario su GitHub e aggiornata nel JSON. Backup automatico pre-migrate. Errori riportati alla fine.
+- **Senza PAT configurato:** alert e blocco al file select, coerente con il flusso publish.
+
+### Naming convention
+
+`<slug-ASCII-titolo>-<timestamp-ms>.<ext>`. Slug max 50 char, lowercase, dash-separated. Timestamp `Date.now()` (ms Unix). Estensione dal MIME. Retry con suffisso random 4-char in caso di collisione (rara).
+
+### Trade-off
+
+- **Pro:** URL pubblico cliccabile per ogni promo. JSON resta KB. Fetch promo veloce su mobile. Cache HTTP standard. Scaling lineare con numero di promo (50 promo da 200 KB = 50 file binari distinti, non 10 MB di JSON).
+- **Contro:** un commit per binario (history più verbosa). File orfani in `promo/` se l'admin sostituisce un file (cleanup manuale, scelta deliberata di semplicità).
+- **Retrocompatibilità:** le promo già esistenti con `url:"data:..."` continuano a funzionare nel modal in-app dell'app utente (`index.html` invariato). Il bottone migrazione le converte one-shot.
+
+### File modificati
+
+- `admin-promo.html`: ~200 righe in più (helpers + refactor + migration UI).
+- `sw.js`: cache `v11 → v12`.
+- `README.md`: sezione "Architettura promo" riscritta. "Sviluppi futuri" pulita (A1 fatto).
+- `TEST_REFACTOR_FILES.md`: nuovo file con 6 test specifici per questo refactor.
+
+### Workflow git
+
+Branch `refactor-upload-binari` → 3 commit logici:
+1. `Refactor: upload binari via Contents API invece di data URI in JSON`
+2. `Add migration: data: URI legacy → file GitHub`
+3. `Docs: AUDIT §11, README aggiornato, TEST_REFACTOR_FILES.md`
+
+PR aperta dall'utente da browser (non via CLI).
+
+---
+
 *Fine audit.*
