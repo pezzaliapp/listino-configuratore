@@ -32,15 +32,24 @@ Il pannello è **pubblicamente accessibile** (`/admin-promo.html`). La protezion
 1. Apri `admin-promo.html`.
 2. Premi **Aggiungi riga promo**.
 3. Scegli un PDF o un'immagine dal computer (max **8 MB** per file).
+   → Il binario viene **immediatamente pushato** su `promo/<slug-titolo>-<timestamp>.<ext>` via GitHub Contents API (un commit dedicato).
+   → Il campo `url` della promo nel JSON locale viene impostato al path (es. `promo/prevendita-b300-1762345678901.pdf`).
 4. Compila titolo, descrizione, data inizio (`startsAt`) e scadenza (`expiresAt`).
-5. Premi **Pubblica su GitHub**. Viene fatto un commit di `promo/promo.json` con il file incorporato come base64.
+5. Premi **Pubblica su GitHub**. Viene fatto un commit di `promo/promo.json` aggiornato.
 6. Gli utenti vedranno la promo entro 1-3 minuti (tempo di deploy GitHub Pages).
 
 Prima di ogni publish viene salvato un **backup automatico** della bozza in IndexedDB (chiave `listino_promo_admin_backup_*`, ultimi 5 conservati). In caso di conflitto (`409` da GitHub) il backup ti permette di non perdere il lavoro.
 
-## Schema di `promo.json`
+## Architettura promo
 
-Le promo possono avere il file **incorporato** (data URI) o **referenziato** (path/URL). Entrambi i formati funzionano nello stesso JSON.
+Le promo sono **sempre file fisici** in `promo/`. Il file `promo/promo.json` contiene solo metadati + il path al binario. Vantaggi:
+
+- **JSON piccolo** (KB invece di MB): fetch veloce su mobile, niente eviction cache.
+- **URL pubblico cliccabile** per ogni promo: condivisibile via WhatsApp, email, SMS — il link porta direttamente al file.
+- **Cache HTTP standard** del browser e di GitHub Pages per i binari.
+- **Scaling lineare** con il numero di promo: 50 promo da 200 KB = 50 file binari distinti, non 10 MB di JSON.
+
+### Schema di `promo.json`
 
 ```json
 [
@@ -48,7 +57,7 @@ Le promo possono avere il file **incorporato** (data URI) o **referenziato** (pa
     "id": "promo-1762345678-ab12c",
     "title": "Prevendita B 300",
     "description": "Promo prevendita esclusiva.",
-    "url": "data:application/pdf;base64,JVBERi0xLjQK...",
+    "url": "promo/prevendita-b-300-1762345678901.pdf",
     "type": "pdf",
     "fileName": "prevendita-b300.pdf",
     "fileMime": "application/pdf",
@@ -57,20 +66,37 @@ Le promo possono avere il file **incorporato** (data URI) o **referenziato** (pa
     "expiresAt": "2026-06-30",
     "active": true,
     "createdAt": "2026-04-29"
-  },
-  {
-    "id": "promo-classica",
-    "title": "Promo classica",
-    "description": "Esempio con file ancora hostato su GitHub.",
-    "url": "promo/vecchio-file.pdf",
-    "type": "pdf",
-    "expiresAt": "2026-12-31",
-    "active": true
   }
 ]
 ```
 
-Quando `url` inizia con `data:`, è incorporato. Altrimenti è un path/URL come prima.
+### Naming convention dei binari
+
+`<slug-ASCII-titolo>-<timestamp-ms>.<ext>`
+
+- Slug: lowercase, max 50 caratteri, niente spazi/accenti/punteggiatura (`Prevendita B 300!` → `prevendita-b-300`).
+- Timestamp: `Date.now()` (millisecondi Unix) — collisioni praticamente impossibili.
+- Estensione: derivata dal MIME (`image/png` → `.png`, `application/pdf` → `.pdf`, ecc.).
+- In caso di collisione (rara): retry con suffisso random 4-char.
+
+Esempio: `prevendita-b-300-1762345678901.pdf`.
+
+### Sostituzione file
+
+Se carichi un nuovo file su una promo che ne aveva già uno, il vecchio file resta su GitHub come orfano (cleanup manuale dalla cartella `promo/`). Scelta deliberata: semplicità implementativa.
+
+### Retrocompatibilità — `data:` URI legacy
+
+Le promo create con la versione precedente (data URI base64 dentro `promo.json`) **continuano a funzionare nell'app utente**: il modal in-app le rende come prima. Per migrarle al nuovo formato (file su GitHub):
+
+- Apri `admin-promo.html`.
+- Premi **Migra embedded → file GitHub**.
+- Per ogni promo legacy, viene fatto un commit binario su GitHub e il `url` del JSON aggiornato.
+- Premi **Pubblica su GitHub** alla fine per committare il `promo.json` ripulito.
+
+I file legacy mantenuti come `data:` URI non sono cliccabili come link esterni (es. WhatsApp condivide l'URL dell'app, non del file). Migrarli è la strada raccomandata.
+
+Quando `url` inizia con `data:`, è una promo legacy. Quando inizia con `promo/`, è il nuovo formato. Le promo possono coesistere nello stesso JSON.
 
 ### Date
 
@@ -82,16 +108,17 @@ Formato sempre `YYYY-MM-DD`. `startsAt` opzionale (se assente, la promo è attiv
 
 ## Limiti pratici
 
-| Dimensione `promo.json` | Comportamento |
+Con il modello "file binari in `promo/` + JSON piccolo" i limiti pratici si spostano ai singoli file:
+
+| Per file | Limite |
 |---|---|
-| Sotto i **10 MB** | Tutto fluido. |
-| Tra **10 e 25 MB** | Su mobile inizia a rallentare il caricamento promo. |
-| Oltre **25 MB** | Sconsigliato. Fetch può fallire su connessioni lente. |
-| Oltre **100 MB** | Limite massimo file su GitHub. Stop. |
+| Dimensione massima admin | **8 MB** (validato lato client) |
+| Dimensione massima GitHub | 100 MB (limite hard, non lo raggiungi) |
+| MIME consentiti | `application/pdf`, `image/jpeg`, `image/png`, `image/webp`, `image/gif` |
 
-L'admin mostra una barra colorata con l'occupazione corrente.
+Il `promo.json` resta nell'ordine dei KB anche con decine di promo. La barra di dimensione nell'admin viene mostrata solo se ci sono promo `data:` legacy non ancora migrate.
 
-A regime, oltre ~10-20 promo embedded conviene passare a uploadare i file binari direttamente nella cartella `promo/` (vedi sezione "Sviluppi futuri").
+> **Nota legacy:** se hai promo embedded `data:` URI nel JSON, valgono ancora i vecchi limiti (10 MB warn, 25 MB danger sulla dimensione del JSON). Migrare per ripulire.
 
 ### Comprimere i PDF prima di caricarli
 
@@ -134,9 +161,10 @@ Per dettagli, audit completo e test: vedi `AUDIT.md` e `TEST_IOS.md`.
 
 ## Sviluppi futuri (non implementati)
 
-- **Upload binari diretto su `promo/`** via Contents API: invece di incorporare i file come base64 in `promo.json`, l'admin uploada il binario direttamente nella cartella `promo/`. Stesso PAT, JSON piccolo, fetch HTTP normale per i file. Risolve il problema di scaling oltre le 10-20 promo. Tracciato in `AUDIT.md` §3 (item A1).
 - **Auto-merge bozza vs remoto** in caso di conflitto multi-admin (`AUDIT.md` MA1 livello 2).
 - **Toast UX** invece di `alert()`/`confirm()` (`AUDIT.md` A3).
+- **Pulizia file orfani** in `promo/` (al momento la sostituzione di un file lascia il vecchio).
+- **Tree API batch** invece di Contents API: un commit unico per multipli file invece di uno per file.
 
 ## Struttura repo
 
@@ -148,9 +176,10 @@ Per dettagli, audit completo e test: vedi `AUDIT.md` e `TEST_IOS.md`.
 ├── manifest.webmanifest     # manifest PWA
 ├── icon.svg                 # icona
 ├── promo/
-│   ├── promo.json           # canonical: lista promo
-│   └── *.pdf, *.png, ...    # file vecchio formato (referenziati via path)
+│   ├── promo.json           # metadati promo (KB)
+│   └── *.pdf, *.png, ...    # binari delle promo (uploadati via admin o manuali)
 ├── README.md                # questo file
-├── AUDIT.md                 # audit di sicurezza/iOS/architettura
-└── TEST_IOS.md              # protocollo test iPhone (opzionale)
+├── AUDIT.md                 # audit di sicurezza/iOS/architettura/refactor
+├── TEST_IOS.md              # protocollo test iPhone
+└── TEST_REFACTOR_FILES.md   # protocollo test refactor binari
 ```
