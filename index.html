@@ -499,15 +499,16 @@ function isDataUri(s){return typeof s==='string' && s.startsWith('data:');}
 // quindi non leggiamo da location.href (può contenere www. se la PWA è stata installata
 // da quell'host) ma usiamo un URL hardcoded e sempre valido.
 const APP_URL='https://alessandropezzali.it/listino-configuratore/';
+const PROMO_DISCLAIMER='Prezzi netti riservati al rivenditore. Non includono IVA 22%, trasporto EX WORK, installazione. Non destinati al cliente finale.';
 function promoWhatsAppText(p){
   const u=promoUrl(p);
   // I data URI base64 non si possono incollare in WhatsApp (peso e formato).
   // Per le promo con file incorporato condividiamo solo testo + invito ad aprire l'app.
   if(isDataUri(u)){
-    return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\nApri l'app: ${APP_URL}`;
+    return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\nApri l'app: ${APP_URL}\n\n${PROMO_DISCLAIMER}`;
   }
   const link=new URL(u, APP_URL).href;
-  return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\n${link}`;
+  return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\n${link}\n\n${PROMO_DISCLAIMER}`;
 }
 function renderPromos(promos){
   if(!els.promoList) return;
