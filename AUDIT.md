@@ -8,6 +8,8 @@ Audit eseguito su `index.html` (637 righe), `admin-promo.html` (692 righe), `sw.
 
 > **Lettura veloce:** salta direttamente a [§0 Riassunto esecutivo](#0-riassunto-esecutivo). Sotto trovi i dettagli tecnici per ogni issue, divisi per area.
 
+> **Stato finale (post-applicazione fix):** vedi [§9 Stato finale](#9-stato-finale-cosa-è-stato-applicato) in fondo.
+
 ---
 
 ## 0. Riassunto esecutivo
@@ -799,9 +801,81 @@ Da rimuovere (vedi SW3).
 ## 8. Cosa NON ho fatto
 
 - **Non ho eseguito** l'app in browser (richiederebbe un setup live; l'audit è statico sul codice).
-- **Non ho testato** sull'iPhone reale: serve te con il device.
-- **Non ho applicato** patch ai file: aspetto la tua conferma su quali interventi vuoi (vedi sezione 7).
+- **Non ho testato** sull'iPhone reale: serve te con il device — vedi `TEST_IOS.md`.
 - **Non ho verificato** i CVE elencati con un dependency scanner: la verifica va fatta con `npm audit` o `osv-scanner` se vuoi rigore.
+
+---
+
+## 9. Stato finale: cosa è stato applicato
+
+Fix applicati sul branch `audit-fixes`. Niente è stato fuso su `main`: il merge è una decisione successiva, dopo i test su iPhone (vedi `TEST_IOS.md`).
+
+### ✅ Applicato — Gruppo A (quick win)
+
+| ID | Fix | File toccati |
+|---|---|---|
+| **S1 / iOS1** | `window.open('about:blank')` sincrono prima dell'`await fetch`, poi navigato. Wrapping HTML per le immagini. Revoke su `pagehide` invece di `setTimeout` solo. | `index.html` |
+| **S2** | Whitelist MIME esplicita: solo `application/pdf`, `image/jpeg/png/webp/gif`. Niente `image/*` generico (blocca SVG-XSS). | `admin-promo.html` |
+| **S6** | Service worker: `promo.json` cachato con chiave canonica (senza query string). Stop alla cache che cresceva all'infinito. | `sw.js`, `index.html`, `admin-promo.html` |
+| **S7** | CSV injection guard nell'export preventivo: prefisso apostrofo davanti a `=`, `+`, `-`, `@`, `\t`, `\r`. Line ending `\r\n` per compat Excel Windows. | `index.html` |
+| **S9** | `escapeHtml` unificato (gestisce anche `'`), `escapeAttr` rimosso, callsite sostituiti. | `index.html` |
+| **S10** | SW fallback offline: HTML home solo per `request.mode === 'navigate'`, altrimenti 504. Più diagnostica, meno confusione. | `sw.js` |
+| **SW3** | `sw.js.bak` rimosso dalla repo. | — |
+| **iOS2** | `apple-touch-icon`, `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`, `apple-mobile-web-app-title`, `theme-color` con media query light/dark. | `index.html`, `admin-promo.html` |
+| **iOS3** | WhatsApp aperto via `<a target="_blank">` invece di `location.href`: la PWA standalone su iOS non viene "abbandonata". | `index.html` |
+| **S4** | Password `admin` rimossa. Il login form è eliminato; al posto suo un avviso arancione che spiega esplicitamente "il PAT è la sola protezione effettiva". | `admin-promo.html` |
+
+### ✅ Applicato — Gruppo B (sicurezza difensiva)
+
+| ID | Fix | File toccati |
+|---|---|---|
+| **S5** | `integrity="sha384-..."` + `crossorigin="anonymous"` su `xlsx@0.18.5` e `pdfjs-dist@3.11.174` caricati da jsdelivr. **Nota:** il worker pdf.js (`pdf.worker.min.js`) è caricato runtime via `pdfjsLib.GlobalWorkerOptions.workerSrc` e SRI **non** si applica ai Worker — la mitigazione lì è la CSP `worker-src 'self' blob: https://cdn.jsdelivr.net`. | `index.html` |
+| **S8** | CSP minimale via `<meta http-equiv="Content-Security-Policy">` su `index.html` e `admin-promo.html`. Mantengo `'unsafe-inline'` perché tutti gli script principali sono inline. Per toglierlo serve refactor: tracciato in C. | `index.html`, `admin-promo.html` |
+| **S3** | Salvataggio `tokenSavedAt` al primo set/cambio token. Avviso UI quando il token è stato salvato da > 60 giorni. | `admin-promo.html` |
+| **MA1 (livello 1)** | Auto-backup della bozza in IndexedDB **prima di ogni publish** (chiave `listino_promo_admin_backup_<ISO>`). Mantiene gli ultimi 5. Il messaggio di conflitto 409 ora cita esplicitamente il backup. | `admin-promo.html` |
+
+### 🟢 Decisioni strategiche prese
+
+- **S4 (password admin):** rimossa. Notice arancione visibile in cima al pannello.
+- **O3 (xlsx):** mantenuto `xlsx@0.18.5` con SRI hash. Alternative valutate per il futuro — vedi sotto.
+- **O10 (docs obsolete):** info utili migrate in `README.md`, file ridondanti rimossi:
+  - ❌ `SETUP_PROMO_CLOUDFLARE.md` (Cloudflare path abbandonato)
+  - ❌ `PROMO_UPGRADE_COMPLETO.md` (4 righe, info già nel README)
+  - ❌ `PROMO_SENZA_CLOUDFLARE.md` (workflow manuale superato dal flusso GitHub API)
+  - ❌ `PROMO_ADMIN_GITHUB.md` (citava la password rimossa)
+  - ❌ `PROMO_EMBEDDED_FILES.md` (contenuti tecnici migrati in README)
+  - ✅ `README.md` riscritto come unica fonte canonica.
+
+### 🔮 Alternative xlsx (per riferimento futuro, **non sostituite ora**)
+
+Se in futuro vorrai sostituire `xlsx@0.18.5` (pacchetto npm non più aggiornato dal 2022):
+
+| Libreria | Pro | Contro | Licenza |
+|---|---|---|---|
+| **`read-excel-file`** (Catamphetamine) | Attivamente mantenuta, ESM, ~150 KB. Solo lettura `.xlsx`. | Non legge `.xls` (formato vecchio). Non scrive. | MIT |
+| **`exceljs`** | Lettura E scrittura. Mantenuta. | Pesante (~450 KB), API più verbosa. | MIT |
+| **SheetJS Pro / `xlsx` da CDN ufficiale** | Versione attuale (0.20.x) con bugfix recenti. | Distribuita solo via `cdn.sheetjs.com` o npm a pagamento. Stessa libreria, build più recente. | Apache 2.0 (community) |
+| **CSV-only** | Zero dipendenze, parser ~30 righe. Più veloce, zero CVE. | Gli utenti devono salvare l'Excel come CSV manualmente. | — |
+
+Raccomandazione operativa: **resta su `xlsx@0.18.5` con SRI**. Il rischio reale è basso (l'utente carica i propri file). Se i clienti italiani non-tecnici si lamentano di file CSV mal formattati o vuoi togliere CDN, valuta `read-excel-file`.
+
+### ⏸️ Lasciato per dopo — Gruppo C
+
+Da affrontare in una sessione dedicata, in particolare A1.
+
+| ID | Cosa | Effort | Perché aspetta |
+|---|---|---|---|
+| **A1** | Upload binari via Contents API (JSON piccolo + file in `promo/`) | ~3 h | Cambio architetturale del flusso admin, va testato con calma. È il vero scaling fix. |
+| **A2** | Estrarre `lib.js` condiviso | ~30 min | Manutenibilità, non urgente. |
+| **A3** | Toast UX invece di `alert()`/`confirm()` | ~1 h | Refactor diffuso, lo facciamo dopo aver scelto la libreria/stile. |
+| **O4** | Passata accessibility (axe / Lighthouse) | ~1 h | Iterativo, da fare con UI design. |
+| **O7** | Viewer PDF interno (pdf.js) per le promo, in alternativa a `window.open` | ~1 h | Già coperto in larga parte da S1; valuta dopo i test iOS. |
+
+### 🔒 Verifica integrità
+
+- Cache version `sw.js`: `listino-configuratore-pro-promo-embedded-v6` → `listino-configuratore-pro-promo-embedded-v9` (forza l'aggiornamento del SW su tutti i client al prossimo deploy).
+- Sintassi JS verificata: `node -e "new Function(...)"` su entrambi gli script inline e su `sw.js`.
+- Nessun riferimento residuo a `ADMIN_PASSWORD`, `loginPanel`, `escapeAttr` (grep pulito).
 
 ---
 
