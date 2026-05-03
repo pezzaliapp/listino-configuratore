@@ -117,6 +117,30 @@ tr:hover td{background:#fafafa}
 .mobileQtyRow input{width:100%;border:1px solid var(--line);border-radius:12px;padding:11px;text-align:center}
 @media(max-width:700px){.pdfTools{display:none!important}.pageBtn,.mobilePageBtn{display:none!important}td[data-label="Pagina"],td:nth-child(4),th:nth-child(4){display:none!important}.mobileMeta{grid-template-columns:1fr}.mobileActions{grid-template-columns:1fr}}
 
+/* Promo modal in-app: usato per promo con file embedded (data URI).
+   Risolve il popup blocker di Safari iOS in PWA standalone (window.open viene
+   trattato come popup non sollecitato anche con user gesture sincrono). */
+.promoModal{position:fixed;inset:0;background:#000;z-index:10000;display:flex;flex-direction:column}
+.promoModal.hide{display:none!important}
+.promoTop{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px;padding-top:calc(10px + env(safe-area-inset-top));background:#020617;color:#fff;border-bottom:1px solid rgba(255,255,255,.12)}
+.promoTop b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:38vw;flex:1;min-width:0}
+.promoTop .btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.promoTop button{padding:9px 11px;border-radius:12px;background:#fff;color:#111827;font-weight:800;font-size:13px;border:0;cursor:pointer}
+.promoTop button.dark{background:#374151;color:#fff}
+.promoTop input{width:60px;border:1px solid #374151;border-radius:10px;padding:8px;text-align:center;background:#fff;color:#111827}
+.promoTop button:disabled{opacity:.4;cursor:not-allowed}
+.promoBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;justify-content:center;align-items:flex-start;padding:12px;background:#000;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+#promoImg{max-width:100%;max-height:calc(100vh - 120px);height:auto;width:auto;object-fit:contain;display:block;box-shadow:0 10px 40px rgba(0,0,0,.5);user-select:none;-webkit-user-select:none;-webkit-touch-callout:default}
+#promoCanvas{background:#fff;box-shadow:0 10px 35px rgba(0,0,0,.35);max-width:100%;height:auto}
+.promoHint{color:#cbd5e1;font-size:12px;text-align:center;padding:7px;background:#111827;padding-bottom:calc(7px + env(safe-area-inset-bottom))}
+@media(max-width:700px){
+  .promoTop{flex-wrap:wrap}
+  .promoTop b{max-width:100%;width:100%}
+  .promoTop .btns{width:100%;justify-content:space-between;gap:6px}
+  .promoTop input{width:54px}
+  .promoTop button{padding:8px 9px;font-size:12px}
+}
+
 /* Promo senza Cloudflare */
 .promoIntro{padding:14px 16px;border-bottom:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.4}
 .promoList{padding:14px 16px;display:grid;gap:12px}
@@ -242,6 +266,24 @@ tr:hover td{background:#fafafa}
   </div>
   <div class="pdfHint">Viewer interno: su iPhone/Android evita i popup bloccati e apre la pagina richiesta dentro la app.</div>
   <div id="pdfCanvasWrap" class="pdfCanvasWrap"><canvas id="pdfCanvas"></canvas></div>
+</div>
+
+<div id="promoModal" class="promoModal hide" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Visualizzatore promo">
+  <div class="promoTop">
+    <b id="promoModalTitle">Promo</b>
+    <div class="btns">
+      <button id="promoPdfPrev" class="dark hide" type="button" aria-label="Pagina precedente">‹</button>
+      <span id="promoPdfNav" class="hide"><span>Pag.</span><input id="promoPdfPageInput" type="number" min="1" value="1" aria-label="Numero pagina"><span id="promoPdfPageTotal">/ —</span></span>
+      <button id="promoPdfNext" class="dark hide" type="button" aria-label="Pagina successiva">›</button>
+      <button id="promoDownload" type="button">Scarica</button>
+      <button id="promoClose" type="button">Chiudi</button>
+    </div>
+  </div>
+  <div id="promoBody" class="promoBody">
+    <img id="promoImg" class="hide" alt="">
+    <canvas id="promoCanvas" class="hide"></canvas>
+  </div>
+  <div id="promoHint" class="promoHint hide">Tieni premuto sull'immagine per salvarla nelle Foto.</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
@@ -471,47 +513,24 @@ function renderPromos(promos){
     if(d!==null && d<=7) badges.push(`<span class="promoBadge hot">Scade tra ${Math.max(0,d)} gg</span>`);
     return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><button class="open" type="button" data-promo-open="${escapeHtml(id)}">Apri promo</button><button class="wa" type="button" data-promo-wa="${escapeHtml(id)}">WhatsApp</button></div></article>`;
   }).join('');
-  // Apri promo: gestisce URL/path normali e data URI.
-  // Su iOS Safari un await prima di window.open fa perdere lo "user gesture" e il popup viene bloccato.
-  // Per le promo embedded apriamo SUBITO una finestra "about:blank" sotto il click sincrono,
-  // poi la riempiamo con il contenuto una volta convertito (HTML wrapper per immagini, blob URL per PDF).
-  els.promoList.querySelectorAll('[data-promo-open]').forEach(btn=>btn.onclick=async()=>{
+  // Apri promo:
+  //   - URL/path normali (es. "promo/file.pdf"): window.open in nuova scheda (funziona OK su iOS).
+  //   - data URI (file embedded in promo.json): modal in-app.
+  // Motivo del modal: Safari iOS in PWA standalone blocca window.open anche con user gesture
+  // sincrono per i popup verso about:blank/blob:. Il modal interno evita del tutto il popup.
+  els.promoList.querySelectorAll('[data-promo-open]').forEach(btn=>btn.onclick=()=>{
     const p=visible.find(x=>promoId(x)===btn.dataset.promoOpen);
     if(!p) return;
     const url=promoUrl(p);
     if(!url||url==='#'){alert('Questa promo non ha un file associato.');return;}
-    if(!url.startsWith('data:')){
-      window.open(url,'_blank','noopener');
+    if(url.startsWith('data:')){
+      // Validazione difensiva: rifiuta data URI di tipo eseguibile/markup (svg+xml, html, ecc.).
+      const okPrefix=/^data:(application\/pdf|image\/(jpeg|png|webp|gif));/i.test(url);
+      if(!okPrefix){alert('Tipo di file promo non supportato per l\'apertura sicura.');return;}
+      openPromoModal(p);
       return;
     }
-    // Validazione difensiva: rifiuta data URI di tipo eseguibile/markup.
-    const okPrefix=/^data:(application\/pdf|image\/(jpeg|png|webp|gif));/i.test(url);
-    if(!okPrefix){alert('Tipo di file promo non supportato per l\'apertura sicura.');return;}
-    // 1) Apri SUBITO una finestra (sincrono → user gesture preservato).
-    const w=window.open('about:blank','_blank','noopener');
-    if(!w){alert('Il browser ha bloccato il popup. Consenti i popup per questo sito.');return;}
-    try{
-      const r=await fetch(url);
-      const blob=await r.blob();
-      const title=(p.title||'Promo').toString();
-      if(blob.type.startsWith('image/')){
-        // iOS Safari rende male blob: di immagini → wrappa in mini-pagina HTML con <img src=data:>
-        const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+'</title><style>html,body{margin:0;background:#111;height:100%}body{display:grid;place-items:center;min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}img{max-width:100%;max-height:100vh;height:auto;display:block;box-shadow:0 10px 40px rgba(0,0,0,.5)}</style></head><body><img src="'+url+'" alt=""></body></html>';
-        w.document.open();w.document.write(html);w.document.close();
-      }else{
-        // PDF: blob URL navigato dentro la finestra già aperta.
-        const blobUrl=URL.createObjectURL(blob);
-        try{w.location.replace(blobUrl);}catch(_){w.location.href=blobUrl;}
-        // Revoca quando il tab figlio si chiude o nasconde, fallback timer 5 min.
-        const release=()=>{try{URL.revokeObjectURL(blobUrl)}catch(_){}};
-        try{w.addEventListener('pagehide',release,{once:true});}catch(_){}
-        setTimeout(release,5*60*1000);
-      }
-    }catch(e){
-      console.error(e);
-      try{w.close();}catch(_){}
-      alert('Errore nell\'apertura della promo: '+e.message);
-    }
+    window.open(url,'_blank','noopener');
   });
   els.promoList.querySelectorAll('[data-promo-wa]').forEach(btn=>btn.onclick=()=>{
     const p=visible.find(x=>promoId(x)===btn.dataset.promoWa);
@@ -630,6 +649,136 @@ document.getElementById('pdfPrev').onclick=()=>renderPdfPage(currentPdfPage-1);
 document.getElementById('pdfNext').onclick=()=>renderPdfPage(currentPdfPage+1);
 els.pdfPageInput.onchange=()=>renderPdfPage(els.pdfPageInput.value);
 window.addEventListener('resize',()=>{if(!els.pdfViewer.classList.contains('hide')&&pdfDoc)renderPdfPage(currentPdfPage);});
+
+/* === Promo modal in-app ===
+   Le promo con file embedded (data URI) si aprono in un modal dentro la PWA.
+   Motivazione: Safari iOS in modalità PWA standalone blocca window.open anche
+   sotto user gesture sincrono. Un modal interno evita popup, blob URL su nuovo
+   tab, e dà UX più immediata (no cambio scheda). */
+const promoEls={
+  modal:document.getElementById('promoModal'),
+  title:document.getElementById('promoModalTitle'),
+  body:document.getElementById('promoBody'),
+  img:document.getElementById('promoImg'),
+  canvas:document.getElementById('promoCanvas'),
+  prev:document.getElementById('promoPdfPrev'),
+  next:document.getElementById('promoPdfNext'),
+  nav:document.getElementById('promoPdfNav'),
+  pageInput:document.getElementById('promoPdfPageInput'),
+  pageTotal:document.getElementById('promoPdfPageTotal'),
+  download:document.getElementById('promoDownload'),
+  close:document.getElementById('promoClose'),
+  hint:document.getElementById('promoHint')
+};
+let promoPdfDoc=null;
+let promoCurrentPage=1;
+let currentPromo=null;
+
+function closePromoModal(){
+  promoEls.modal.classList.add('hide');
+  promoEls.modal.setAttribute('aria-hidden','true');
+  promoEls.img.classList.add('hide');
+  promoEls.img.removeAttribute('src');
+  promoEls.canvas.classList.add('hide');
+  promoEls.hint.classList.add('hide');
+  [promoEls.prev,promoEls.next,promoEls.nav].forEach(e=>e.classList.add('hide'));
+  promoPdfDoc=null;
+  promoCurrentPage=1;
+  currentPromo=null;
+}
+async function renderPromoPdfPage(n){
+  if(!promoPdfDoc) return;
+  promoCurrentPage=Math.min(Math.max(1,Number(n)||1),promoPdfDoc.numPages);
+  const page=await promoPdfDoc.getPage(promoCurrentPage);
+  const wrapW=Math.max(320,promoEls.body.clientWidth-24);
+  const base=page.getViewport({scale:1});
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const scale=Math.min(wrapW/base.width,1.6);
+  const viewport=page.getViewport({scale});
+  const c=promoEls.canvas, ctx=c.getContext('2d');
+  c.width=Math.floor(viewport.width*dpr);
+  c.height=Math.floor(viewport.height*dpr);
+  c.style.width=Math.floor(viewport.width)+'px';
+  c.style.height=Math.floor(viewport.height)+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  await page.render({canvasContext:ctx,viewport}).promise;
+  promoEls.pageInput.value=promoCurrentPage;
+  promoEls.body.scrollTop=0;
+  promoEls.prev.disabled=promoCurrentPage<=1;
+  promoEls.next.disabled=promoCurrentPage>=promoPdfDoc.numPages;
+}
+async function openPromoModal(p){
+  currentPromo=p;
+  promoEls.title.textContent=p.title||'Promo';
+  promoEls.modal.classList.remove('hide');
+  promoEls.modal.setAttribute('aria-hidden','false');
+  const url=p.url||'';
+  if(url.startsWith('data:image/')){
+    promoEls.img.src=url;
+    promoEls.img.classList.remove('hide');
+    promoEls.canvas.classList.add('hide');
+    [promoEls.prev,promoEls.next,promoEls.nav].forEach(e=>e.classList.add('hide'));
+    promoEls.hint.classList.remove('hide');
+  }else if(url.startsWith('data:application/pdf')){
+    if(!window.pdfjsLib){
+      alert('Viewer PDF non caricato. Apri la app una volta con internet attivo.');
+      closePromoModal();return;
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    try{
+      const r=await fetch(url);
+      const buf=await r.arrayBuffer();
+      promoPdfDoc=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
+      promoEls.canvas.classList.remove('hide');
+      promoEls.img.classList.add('hide');
+      promoEls.hint.classList.add('hide');
+      promoEls.pageTotal.textContent='/ '+promoPdfDoc.numPages;
+      const showNav=promoPdfDoc.numPages>1;
+      [promoEls.prev,promoEls.next,promoEls.nav].forEach(e=>e.classList.toggle('hide',!showNav));
+      await renderPromoPdfPage(1);
+    }catch(e){
+      console.error(e);
+      alert('Errore caricamento PDF: '+e.message);
+      closePromoModal();
+    }
+  }else{
+    alert('Formato promo non supportato.');
+    closePromoModal();
+  }
+}
+async function downloadPromoFile(p){
+  if(!p||!p.url) return;
+  // Converti data URI in Blob URL e triggera download via <a download> sintetico.
+  // <a download> con Blob URL è un download (non un popup) → non bloccato dal popup blocker.
+  try{
+    const r=await fetch(p.url);
+    const blob=await r.blob();
+    const blobUrl=URL.createObjectURL(blob);
+    const ext=blob.type.startsWith('image/')?(blob.type.split('/')[1]||'img'):(blob.type==='application/pdf'?'pdf':'bin');
+    const filename=p.fileName || ((p.title||'promo').replace(/[^\w\-. ]+/g,'_')+'.'+ext);
+    const a=document.createElement('a');
+    a.href=blobUrl;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(blobUrl),60*1000);
+  }catch(e){
+    alert('Errore durante il download: '+e.message);
+  }
+}
+promoEls.close.onclick=closePromoModal;
+promoEls.modal.addEventListener('click',e=>{
+  // Chiudi se l'utente tocca lo sfondo (modal o body), non l'immagine/canvas/header.
+  if(e.target===promoEls.modal||e.target===promoEls.body) closePromoModal();
+});
+promoEls.prev.onclick=()=>renderPromoPdfPage(promoCurrentPage-1);
+promoEls.next.onclick=()=>renderPromoPdfPage(promoCurrentPage+1);
+promoEls.pageInput.onchange=()=>renderPromoPdfPage(promoEls.pageInput.value);
+promoEls.download.onclick=()=>downloadPromoFile(currentPromo);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!promoEls.modal.classList.contains('hide')) closePromoModal();
+});
+window.addEventListener('resize',()=>{
+  if(!promoEls.modal.classList.contains('hide')&&promoPdfDoc) renderPromoPdfPage(promoCurrentPage);
+});
 function sendWhatsApp(){
   const text=quoteText();
   if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;}

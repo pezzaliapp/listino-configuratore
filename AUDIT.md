@@ -873,9 +873,67 @@ Da affrontare in una sessione dedicata, in particolare A1.
 
 ### 🔒 Verifica integrità
 
-- Cache version `sw.js`: `listino-configuratore-pro-promo-embedded-v6` → `listino-configuratore-pro-promo-embedded-v9` (forza l'aggiornamento del SW su tutti i client al prossimo deploy).
+- Cache version `sw.js`: `listino-configuratore-pro-promo-embedded-v6` → `v9` (gruppo A+B) → `v10` (popup-fix-ios-pwa).
 - Sintassi JS verificata: `node -e "new Function(...)"` su entrambi gli script inline e su `sw.js`.
 - Nessun riferimento residuo a `ADMIN_PASSWORD`, `loginPanel`, `escapeAttr` (grep pulito).
+
+---
+
+## 10. Fix v2 — modal in-app per promo embedded (branch `popup-fix-ios-pwa`)
+
+**Data:** 2026-05-03 (stesso giorno, pomeriggio)
+**Triggered by:** test reali su iPhone iOS 18 / Safari 18 in PWA standalone.
+
+### Cosa è successo
+
+Il fix v1 (S1/iOS1) — `window.open('about:blank')` sincrono prima dell'`await`, poi navigazione con `location.replace(blobUrl)` o `document.write(html)` — **è stato bloccato lo stesso** dal popup blocker di Safari iOS in modalità PWA standalone:
+
+```
+Test 2/3 risultato: si apre brevemente about:blank, poi alert
+"Il browser ha bloccato il popup. Consenti i popup per questo sito."
+```
+
+Spiegazione: in PWA standalone (icon home + display:standalone), Safari iOS 18 considera **qualsiasi** `window.open` come un popup non sollecitato, anche con user activation valido e senza `await`. Si tratta di un comportamento più stretto di Safari mobile non-standalone.
+
+### Come è stato risolto (v2)
+
+Cambio di approccio: **niente `window.open` per le promo embedded**. Si apre invece un **modal interno** dentro la PWA:
+
+- Detection: `if (url.startsWith('data:')) → openPromoModal(p)` altrimenti `window.open(url, '_blank', 'noopener')` (path/URL normali continuano a funzionare come prima — Test 1 confermato OK).
+- Per `data:image/...`: `<img src="data:...">` dentro un overlay fullscreen, con hint "Tieni premuto per salvare".
+- Per `data:application/pdf`: `pdf.js` rende la prima pagina su canvas, con controlli prev/next se multi-pagina.
+- Pulsante "Scarica" usa `fetch(dataUri) → Blob → URL.createObjectURL(blob) → <a download>` al click. `<a download>` con Blob URL **non** è un popup → non bloccato dal popup blocker iOS.
+- Chiusura: pulsante X, tap sullo sfondo nero, tasto ESC (su tastiera).
+- Validazione MIME conservata (rifiuta SVG, HTML, ecc.).
+
+### File modificati
+
+- `index.html`: aggiunti modal `#promoModal` (HTML), CSS `.promoModal/.promoTop/.promoBody`, blocco JS ~110 righe (`openPromoModal`, `renderPromoPdfPage`, `closePromoModal`, `downloadPromoFile`), click handler semplificato.
+- `sw.js`: cache version v9 → v10.
+- `TEST_IOS.md`: Test 2/3 riscritti per la versione modal, aggiunto Test 3b per il download.
+
+### Cosa è stato rimosso (perché non serve più)
+
+- `window.open('about:blank','_blank','noopener')` come stratagemma.
+- Il wrapping HTML inline nel tab figlio.
+- `setTimeout(URL.revokeObjectURL, 5*60*1000)` legato a tab esterno.
+
+### Trade-off
+
+- **Pro:** il modal evita del tutto il popup blocker, l'apertura è immediata, niente cambio di scheda, UX più nativa, l'utente resta dentro la PWA.
+- **Contro:** la prima volta che si apre un PDF embedded c'è un piccolo delay (caricamento pdf.js worker se non ancora caricato + parsing del PDF). Trascurabile su mobile moderno.
+- **Memoria:** il PDF/immagine resta nel DOM finché il modal è aperto. Per file fino a 8 MB (limite admin), tranquillo. Per file molto più grandi, attenzione (ma l'admin già blocca a 8 MB).
+- **Download:** dipende dal comportamento del browser per `<a download>` con Blob URL. Su iOS Safari triggera tipicamente lo share sheet (non un download diretto). Da verificare in Test 3b.
+
+### Stato finale dei due rami audit
+
+```
+main (non ancora aggiornato)
+ └── audit-fixes (PR #1 da aprire)
+      └── popup-fix-ios-pwa (PR #2 da aprire, dopo PR #1)
+```
+
+Il merge sequenziale è quello consigliato: prima `audit-fixes` (Group A+B), poi `popup-fix-ios-pwa` (modal). Possono anche essere mergiati insieme se preferisci una review unica.
 
 ---
 

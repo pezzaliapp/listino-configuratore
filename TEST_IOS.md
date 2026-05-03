@@ -35,38 +35,63 @@ Da ora in avanti, apri SEMPRE l'app dalla Home (non da Safari) per testare il co
 
 ---
 
-## Test 2 — Promo PDF embedded (data URI) → era scheda bianca, deve aprirsi
+## Test 2 — Promo PDF embedded → modal in-app (v2 dopo feedback iPhone)
 
-**Obiettivo:** verifica del fix S1/iOS1 (popup post-await).
+**Obiettivo:** verifica del fix popup-fix-ios-pwa. La v1 (window.open + about:blank pre-await) era stata bloccata da Safari iOS 18 in PWA standalone. La v2 usa un **modal interno** dentro la PWA, niente popup.
 
-1. Stessa app, sezione Promo.
-2. Trova la promo con file embedded (nel `promo.json` corrente è "prova puma" — type `image`, ma il principio vale anche per PDF).
+**Setup:** servono almeno una promo embedded di tipo PDF (`url` che inizia con `data:application/pdf`). Se non l'hai ancora, aggiungila via admin: carica un PDF qualunque < 4 MB e pubblica.
+
+1. Apri l'app dalla Home iPhone.
+2. Sezione **Promo** → individua una promo con icona/etichetta PDF embedded.
 3. Premi **Apri promo**.
 
-**Atteso (PDF embedded):**
-- Si apre un nuovo tab Safari con il PDF reso correttamente (oppure proposta di download del PDF — entrambi accettabili su iOS, dipende dalla versione).
-- **Niente scheda bianca.**
+**Atteso:**
+- **Niente nuova scheda Safari, niente popup blocker alert.**
+- Si apre un overlay nero a tutto schermo **dentro la PWA** con:
+  - In alto: titolo della promo + pulsanti "Pag. ‹›" (se PDF multi-pagina), "Scarica", "Chiudi".
+  - Al centro: la prima pagina del PDF renderizzata (canvas pdf.js).
+- Premi "›" per andare alla pagina successiva, poi "‹" per tornare. Inserisci un numero nell'input "Pag." e premi Invio: salta a quella pagina.
+- Premi **Chiudi** o tocca lo sfondo nero a lato del PDF: il modal si chiude e torni alla pagina promo.
 
-**Se vedi ancora scheda bianca:**
-- Verifica di non avere il vecchio service worker cachato. Forza refresh: Settings → Safari → Cancella cronologia e dati siti web.
-- Verifica nella console dev (Mac collegato + Safari → Sviluppo → [il tuo iPhone] → la pagina) se ci sono errori CSP o fetch falliti.
+**Se vedi ancora popup blocker o scheda bianca:** il SW v10 non è attivo. Da Mac collegato → DevTools iPhone → Storage → Service Workers → controlla che il nome cache sia `listino-configuratore-pro-promo-embedded-v10`. Se è ancora v9 o precedente: Settings → Safari → Avanzate → Dati siti web → rimuovi il sito, poi reinstalla la PWA.
 
 ---
 
-## Test 3 — Promo immagine embedded → wrap HTML
+## Test 3 — Promo immagine embedded → modal in-app
 
-**Obiettivo:** verifica del wrapping `<img>` per immagini embedded (lato iOS Safari ha bug noto sui blob URL di immagini).
+**Obiettivo:** stessa logica del Test 2, ma per immagini.
 
 1. Apri la promo "prova puma" (tipo image).
 2. Premi **Apri promo**.
 
 **Atteso:**
-- Si apre un nuovo tab con sfondo nero e l'immagine al centro.
-- L'immagine è ridimensionata a max 100% larghezza schermo.
-- Pinch-to-zoom funziona.
-- **Niente schermo bianco.**
+- **Niente popup, niente nuova scheda.**
+- Modal in-app: sfondo nero, immagine centrata, ridimensionata a max 100% larghezza/altezza schermo.
+- In basso, hint chiaro: *"Tieni premuto sull'immagine per salvarla nelle Foto."*
+- I pulsanti di navigazione pagine PDF NON sono visibili (è un'immagine, non un PDF).
+- Pinch-to-zoom sul modal funziona (il modal stesso scrolla, l'immagine resta centrata).
 
-**Se vedi schermo bianco:** potrebbe esserci un problema CSP (l'immagine usa data URI, dovrebbe essere consentita da `img-src 'self' data: blob:`). Apri la console su Mac collegato e cerca errori CSP.
+**Test rapidi correlati:**
+- Tieni premuto sull'immagine → menu iOS con "Salva immagine", "Copia", "Condividi". ✅ se appare.
+- Premi **Chiudi** → modal si chiude.
+- Tocca lo sfondo nero (lato sinistro/destro fuori dall'immagine) → modal si chiude. ✅
+- Tocca l'immagine stessa → modal NON si chiude (deve restare aperto per consentire long-press).
+
+---
+
+## Test 3b — Pulsante "Scarica" nel modal
+
+**Obiettivo:** verifica del download via Blob URL + `<a download>`.
+
+1. Apri una promo embedded (PDF o immagine) → modal aperto.
+2. Premi **Scarica** in alto a destra del modal.
+
+**Atteso (iOS):**
+- iOS apre il **share sheet** o un menu "Apri in...", oppure salva direttamente nei Download / File a seconda dell'app predefinita.
+- Per le immagini: alcune versioni iOS aprono direttamente in una nuova scheda Safari con prompt "Salva nelle Foto". Anche questo è ok.
+- **Non ci deve essere errore CSP nella console** (Mac collegato → Sviluppo → console JS).
+
+**Se non funziona:** controlla nella console errori CSP (probabile `default-src` che blocca la navigazione a `blob:`). In tal caso si può aggiungere `blob:` a `default-src` o testare con `<a target="_blank">` esplicito. Segnalalo.
 
 ---
 
@@ -81,7 +106,7 @@ Da ora in avanti, apri SEMPRE l'app dalla Home (non da Safari) per testare il co
 - Il messaggio precompilato include titolo, descrizione, scadenza e link all'app.
 - **La PWA continua a esistere in background.** Tornando dall'app switcher iOS, la PWA è ancora aperta nel suo stato.
 
-**Se la PWA "sparisce":** il fix non ha avuto effetto. Verifica che il SW sia effettivamente la v9 (DevTools collegato → Service Workers → controllare il nome `listino-configuratore-pro-promo-embedded-v9`).
+**Se la PWA "sparisce":** il fix non ha avuto effetto. Verifica che il SW sia effettivamente la v9 (DevTools collegato → Service Workers → controllare il nome `listino-configuratore-pro-promo-embedded-v10`).
 
 ---
 
@@ -102,7 +127,7 @@ Da ora in avanti, apri SEMPRE l'app dalla Home (non da Safari) per testare il co
 **Obiettivo:** verifica del fix S6 (cache canonical key).
 
 1. Da Mac collegato all'iPhone, Safari → Sviluppo → [iPhone] → la pagina del listino.
-2. Storage → Cache Storage → `listino-configuratore-pro-promo-embedded-v9`.
+2. Storage → Cache Storage → `listino-configuratore-pro-promo-embedded-v10`.
 3. Conta le entry. Dovrebbero essere ~5 file iniziali + 1 entry per `promo.json`.
 4. Premi 5 volte il pulsante **Aggiorna** nella sezione Promo.
 5. Ricontrolla. **Le entry NON devono aumentare** (prima del fix, ogni `?v=...` aggiungeva una entry).
@@ -196,4 +221,4 @@ Per ogni test, segnami:
 - Se PWA installata o aperta da Safari
 - Eventuale screenshot della scheda bianca / errore
 
-I test che mi interessano di più, in ordine: **Test 2, Test 3, Test 4, Test 7, Test 8**.
+I test che mi interessano di più, in ordine: **Test 2, Test 3, Test 3b, Test 4, Test 7, Test 8**.
