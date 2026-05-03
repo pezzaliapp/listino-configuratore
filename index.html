@@ -3,9 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
+<meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com https://cdn.jsdelivr.net data: blob:; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Listino PRO">
 <title>Configuratore Listino PRO</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
 <style>
 :root{
   --bg:#f4f6fb;--panel:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;
@@ -237,8 +244,8 @@ tr:hover td{background:#fafafa}
   <div id="pdfCanvasWrap" class="pdfCanvasWrap"><canvas id="pdfCanvas"></canvas></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" integrity="sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script>
 const els={
   file:document.getElementById('file'),status:document.getElementById('status'),tbody:document.getElementById('tbody'),
@@ -260,8 +267,7 @@ const key=s=>norm(s).toLowerCase().replace(/[àá]/g,'a').replace(/[èé]/g,'e')
 const pageNum=v=>{const m=norm(v).match(/\d+/);return m?Number(m[0]):9999};
 const pageTokens=v=>norm(v).match(/\d+/g)||[];
 const pageMatch=(cell,selected)=>!selected||pageTokens(cell).includes(String(selected));
-function escapeHtml(s){return norm(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
-function escapeAttr(s){return escapeHtml(s).replace(/'/g,'&#39;')}
+function escapeHtml(s){return norm(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function pick(o,names){
   const m={}; Object.keys(o).forEach(k=>m[key(k)]=o[k]);
   for(const n of names){ const v=m[key(n)]; if(v!==undefined&&v!==null&&v!=='') return v; }
@@ -308,7 +314,7 @@ function load(){
 }
 function fillSelect(sel,vals){
   const first=sel.options[0].textContent;
-  sel.innerHTML=`<option value="">${first}</option>`+vals.map(v=>`<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join('');
+  sel.innerHTML=`<option value="">${first}</option>`+vals.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
 }
 function buildFilters(){
   fillSelect(els.fam,[...new Set(rows.map(r=>r.famiglia).filter(Boolean))].sort());
@@ -319,7 +325,7 @@ function buildFilters(){
 }
 function renderChips(){
   const top=[...new Set(rows.map(r=>r.famiglia).filter(Boolean))].slice(0,8);
-  els.chips.innerHTML=top.map(v=>`<button class="chip" data-fam="${escapeAttr(v)}">${escapeHtml(v)}</button>`).join('');
+  els.chips.innerHTML=top.map(v=>`<button class="chip" data-fam="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join('');
   els.chips.querySelectorAll('button').forEach(b=>b.onclick=()=>{els.fam.value=b.dataset.fam;applyFilters();});
 }
 function applyFilters(){
@@ -411,7 +417,12 @@ function quoteText(){
 }
 function exportQuoteCsv(){
   const lines=[['Codice','Descrizione','Prezzo','Qta','Totale'],...quote.map(x=>[x.codice,x.descrizione,x.prezzo,x.qta,x.prezzo*x.qta])];
-  download('preventivo.csv',lines.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(';')).join('\n'));
+  // Anti CSV-injection: se la cella inizia con =, +, -, @, tab o CR, prefissa apostrofo.
+  // Senza questa guardia, una descrizione tipo "=cmd|..." apre Excel come formula al click.
+  const safe=v=>{const s=String(v??'');return /^[=+\-@\t\r]/.test(s)?"'"+s:s;};
+  download('preventivo.csv',
+    lines.map(r=>r.map(v=>'"'+safe(v).replaceAll('"','""')+'"').join(';')).join('\r\n')
+  );
 }
 function download(name,text){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/csv'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
@@ -458,33 +469,59 @@ function renderPromos(promos){
     const id=promoId(p);const d=daysToExpiry(p);const isNew=!seen.includes(id);const badges=[];
     if(isNew) badges.push('<span class="promoBadge new">NUOVA</span>');
     if(d!==null && d<=7) badges.push(`<span class="promoBadge hot">Scade tra ${Math.max(0,d)} gg</span>`);
-    return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><button class="open" type="button" data-promo-open="${escapeAttr(id)}">Apri promo</button><button class="wa" type="button" data-promo-wa="${escapeAttr(id)}">WhatsApp</button></div></article>`;
+    return `<article class="promoCard"><div class="promoCardHead"><div class="promoTitle">${escapeHtml(p.title||'Promo')}</div><div class="promoBadges">${badges.join('')}</div></div><div class="promoDesc">${escapeHtml(p.description||'')}</div><div class="promoDates">${promoStart(p)?`<div>Inizio: <b>${escapeHtml(promoStart(p))}</b></div>`:''}${promoExpiry(p)?`<div>Scade: <b>${escapeHtml(promoExpiry(p))}</b></div>`:''}</div><div class="promoActions"><button class="open" type="button" data-promo-open="${escapeHtml(id)}">Apri promo</button><button class="wa" type="button" data-promo-wa="${escapeHtml(id)}">WhatsApp</button></div></article>`;
   }).join('');
-  // Apri promo: gestisce sia URL/path normali che data URI (i browser bloccano la navigazione diretta a data:, quindi convertiamo in Blob URL al volo).
+  // Apri promo: gestisce URL/path normali e data URI.
+  // Su iOS Safari un await prima di window.open fa perdere lo "user gesture" e il popup viene bloccato.
+  // Per le promo embedded apriamo SUBITO una finestra "about:blank" sotto il click sincrono,
+  // poi la riempiamo con il contenuto una volta convertito (HTML wrapper per immagini, blob URL per PDF).
   els.promoList.querySelectorAll('[data-promo-open]').forEach(btn=>btn.onclick=async()=>{
     const p=visible.find(x=>promoId(x)===btn.dataset.promoOpen);
     if(!p) return;
     const url=promoUrl(p);
     if(!url||url==='#'){alert('Questa promo non ha un file associato.');return;}
+    if(!url.startsWith('data:')){
+      window.open(url,'_blank','noopener');
+      return;
+    }
+    // Validazione difensiva: rifiuta data URI di tipo eseguibile/markup.
+    const okPrefix=/^data:(application\/pdf|image\/(jpeg|png|webp|gif));/i.test(url);
+    if(!okPrefix){alert('Tipo di file promo non supportato per l\'apertura sicura.');return;}
+    // 1) Apri SUBITO una finestra (sincrono → user gesture preservato).
+    const w=window.open('about:blank','_blank','noopener');
+    if(!w){alert('Il browser ha bloccato il popup. Consenti i popup per questo sito.');return;}
     try{
-      if(url.startsWith('data:')){
-        // converte data URI in Blob URL: i browser bloccano window.open su data:
-        const r=await fetch(url);
-        const blob=await r.blob();
-        const blobUrl=URL.createObjectURL(blob);
-        const w=window.open(blobUrl,'_blank','noopener');
-        if(!w){alert('Il browser ha bloccato l\'apertura. Consenti i popup per questo sito.');}
-        // libera memoria dopo un minuto, abbastanza per aprirla e visualizzarla
-        setTimeout(()=>URL.revokeObjectURL(blobUrl),60000);
+      const r=await fetch(url);
+      const blob=await r.blob();
+      const title=(p.title||'Promo').toString();
+      if(blob.type.startsWith('image/')){
+        // iOS Safari rende male blob: di immagini → wrappa in mini-pagina HTML con <img src=data:>
+        const html='<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+'</title><style>html,body{margin:0;background:#111;height:100%}body{display:grid;place-items:center;min-height:100vh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}img{max-width:100%;max-height:100vh;height:auto;display:block;box-shadow:0 10px 40px rgba(0,0,0,.5)}</style></head><body><img src="'+url+'" alt=""></body></html>';
+        w.document.open();w.document.write(html);w.document.close();
       }else{
-        window.open(url,'_blank','noopener');
+        // PDF: blob URL navigato dentro la finestra già aperta.
+        const blobUrl=URL.createObjectURL(blob);
+        try{w.location.replace(blobUrl);}catch(_){w.location.href=blobUrl;}
+        // Revoca quando il tab figlio si chiude o nasconde, fallback timer 5 min.
+        const release=()=>{try{URL.revokeObjectURL(blobUrl)}catch(_){}};
+        try{w.addEventListener('pagehide',release,{once:true});}catch(_){}
+        setTimeout(release,5*60*1000);
       }
     }catch(e){
       console.error(e);
+      try{w.close();}catch(_){}
       alert('Errore nell\'apertura della promo: '+e.message);
     }
   });
-  els.promoList.querySelectorAll('[data-promo-wa]').forEach(btn=>btn.onclick=()=>{const p=visible.find(x=>promoId(x)===btn.dataset.promoWa);if(p) location.href='https://wa.me/?text='+encodeURIComponent(promoWhatsAppText(p));});
+  els.promoList.querySelectorAll('[data-promo-wa]').forEach(btn=>btn.onclick=()=>{
+    const p=visible.find(x=>promoId(x)===btn.dataset.promoWa);
+    if(!p) return;
+    // Usa <a target="_blank"> invece di location.href per non uscire dalla PWA in standalone su iOS.
+    const a=document.createElement('a');
+    a.href='https://wa.me/?text='+encodeURIComponent(promoWhatsAppText(p));
+    a.target='_blank';a.rel='noopener';
+    document.body.appendChild(a);a.click();a.remove();
+  });
   const newIds=visible.map(promoId).filter(id=>!seen.includes(id));
   if(newIds.length){setTimeout(()=>alert('🔥 È arrivata una nuova promo. Aprila dalla sezione Promo.'),250);localStorage.setItem('listino_promo_seen_ids', JSON.stringify([...new Set([...seen, ...visible.map(promoId)])]));}
 }
@@ -533,7 +570,7 @@ async function loadPromos(){
 
   // 3) Per gli utenti finali: legge il promo.json pubblicato.
   try{
-    const res=await fetch('./promo/promo.json?v='+Date.now(),{cache:'no-store'});
+    const res=await fetch('./promo/promo.json',{cache:'no-store'});
     if(!res.ok) throw new Error('promo.json non trovato');
     const data=await res.json();
     renderPromos(data);
@@ -596,7 +633,11 @@ window.addEventListener('resize',()=>{if(!els.pdfViewer.classList.contains('hide
 function sendWhatsApp(){
   const text=quoteText();
   if(!quote.length){alert('Aggiungi almeno un articolo al preventivo.');return;}
-  window.location.href='https://wa.me/?text='+encodeURIComponent(text);
+  // <a target="_blank"> invece di location.href: in PWA standalone su iOS evita di uscire dalla app.
+  const a=document.createElement('a');
+  a.href='https://wa.me/?text='+encodeURIComponent(text);
+  a.target='_blank';a.rel='noopener';
+  document.body.appendChild(a);a.click();a.remove();
 }
 
 els.file.onchange=async e=>{
