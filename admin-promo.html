@@ -55,7 +55,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
 .row .actions button.btnReact:hover{background:#d1fae5}
 .row .actions button.btnDel{background:#fef2f2;color:#b91c1c;border:1.5px solid #fca5a5}
 .row .actions button.btnDel:hover{background:#fee2e2}
-@media(max-width:680px){.row .actions button{min-height:44px;padding:11px 16px;flex:1 1 auto}}
+@media(max-width:680px){.row .actions{flex-direction:column}.row .actions button{min-height:44px;padding:11px 16px;width:100%}}
 #rowsFooter{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0 12px}
 #rowsFooter button{padding:12px 22px;border-radius:8px;font-weight:600;font-size:14px;border:0;cursor:pointer;transition:background .15s}
 #rowsFooter button#add{background:#1F2A44;color:#fff}
@@ -66,7 +66,7 @@ input,textarea,select{width:100%;border:1px solid var(--line);border-radius:13px
 #rowsFooter button#migrate:hover{background:#ffedd5}
 #rowsFooter button:disabled{opacity:.55;cursor:not-allowed}
 #rowsHelp{margin-bottom:0}
-@media(max-width:680px){#rowsFooter button{min-height:44px;flex:1 1 auto}}
+@media(max-width:680px){#rowsFooter{flex-direction:column}#rowsFooter button{min-height:44px;width:100%}}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .small{font-size:13px;color:var(--muted);line-height:1.45}
