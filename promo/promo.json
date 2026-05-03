@@ -40,5 +40,19 @@
     "expiresAt": "2026-05-03",
     "active": true,
     "createdAt": "2026-05-03"
+  },
+  {
+    "id": "promo-1777807598632-pt3vm",
+    "title": "Smontagomme Puma",
+    "description": "prova puma",
+    "url": "",
+    "type": "image",
+    "fileName": "",
+    "fileMime": "",
+    "fileSize": 0,
+    "startsAt": "2026-05-03",
+    "expiresAt": "2026-05-03",
+    "active": true,
+    "createdAt": "2026-05-03"
   }
 ]
