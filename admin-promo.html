@@ -176,6 +176,80 @@ const MAX_FILE_MB=8;
 const WARN_TOTAL_MB=10;
 const DANGER_TOTAL_MB=25;
 const ALLOWED_MIME=new Set(['application/pdf','image/jpeg','image/png','image/webp','image/gif']);
+const MIME_TO_EXT={'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'};
+
+/* Counter delle promo binarie pushate in questa sessione (resettato a publish del JSON).
+   Usato per il summary "Pubblicato JSON + N file binari". */
+let binariesUploadedThisSession=0;
+
+/* Slug ASCII per nome file. Max 50 char, lowercase, dash-separated, niente caratteri speciali. */
+function slugify(s){
+  return String(s||'')
+    .toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g,'') // strip combining diacritical marks
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'')
+    .slice(0,50) || 'promo';
+}
+function randomSuffix(){return Math.random().toString(36).slice(2,6);}
+function buildPromoFilename(title, mime){
+  const ext=MIME_TO_EXT[mime]||'bin';
+  return `${slugify(title)}-${Date.now()}.${ext}`;
+}
+
+/* Estrae la base64 del contenuto di un Blob/File (senza prefix data: URI). Usata per Contents API. */
+function fileToBase64(blob){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{const s=r.result;const i=s.indexOf(',');res(s.slice(i+1));};
+    r.onerror=()=>rej(r.error);
+    r.readAsDataURL(blob);
+  });
+}
+
+/* GitHub Contents API: PUT di un file binario.
+   path è relativo alla root della repo (es. "promo/foo.png").
+   sha è opzionale: passare quello esistente per aggiornare un file. Per file nuovi, omettere. */
+async function ghPutBinary(cfg, path, b64Content, message, sha){
+  const apiUrl=`https://api.github.com/repos/${encodeURIComponent(cfg.owner)}/${encodeURIComponent(cfg.repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const body={message, content:b64Content, branch:cfg.branch};
+  if(sha) body.sha=sha;
+  return fetch(apiUrl,{
+    method:'PUT',
+    headers:Object.assign({'Content-Type':'application/json'},ghHeaders(cfg.token)),
+    body:JSON.stringify(body)
+  });
+}
+
+/* Upload binario di una promo: gestisce naming, retry su collisione, errori API.
+   Ritorna il path relativo da salvare in promo.url (es. "promo/foo-1234.png").
+   Lancia in caso di errore — il chiamante NON deve modificare il JSON se questa fallisce.
+   Nota: se l'utente sostituisce un file su una promo esistente, il file vecchio
+   resta orfano su GitHub. La cleanup è manuale (semplicità implementativa). */
+async function uploadPromoBinary(cfg, blob, title, mime){
+  const baseFilename=buildPromoFilename(title, mime);
+  const tryPath=name=>'promo/'+name;
+  const b64=await fileToBase64(blob);
+  const message=`Add ${tryPath(baseFilename)}`;
+  let r=await ghPutBinary(cfg, tryPath(baseFilename), b64, message);
+  if(r.ok) return tryPath(baseFilename);
+  // Collisione (rara col timestamp ms): retry con suffisso random
+  if(r.status===422){
+    const errData=await r.clone().json().catch(()=>({}));
+    if(/sha|exist/i.test(errData.message||'')){
+      const dot=baseFilename.lastIndexOf('.');
+      const altName=baseFilename.slice(0,dot)+'-'+randomSuffix()+baseFilename.slice(dot);
+      r=await ghPutBinary(cfg, tryPath(altName), b64, `Add ${tryPath(altName)}`);
+      if(r.ok) return tryPath(altName);
+    }
+  }
+  // Errore: alza con dettagli per mostrare alert chiaro al chiamante.
+  const txt=await r.text().catch(()=>'');
+  let detail='';
+  try{const j=JSON.parse(txt);detail=j.message||txt;}catch(_){detail=txt;}
+  throw new Error(`GitHub API ${r.status}: ${detail.slice(0,300)}`);
+}
+
 let promos=[];
 const $=id=>document.getElementById(id);
 
@@ -282,20 +356,15 @@ function updateSizeInfo(){
   `;
 }
 
-/* File upload → data URI */
-function fileToDataUri(file){
-  return new Promise((resolve,reject)=>{
-    const r=new FileReader();
-    r.onload=()=>resolve(r.result);
-    r.onerror=()=>reject(r.error);
-    r.readAsDataURL(file);
-  });
-}
+/* File upload: pusha il binario su GitHub via Contents API e salva il PATH in promo.url.
+   Comportamento transazionale: se il PUT del binario fallisce, NON modifica il JSON locale.
+   Vecchia logica (data URI base64 in promo.json) sostituita per coerenza WhatsApp:
+   ora ogni promo ha un URL pubblico cliccabile su alessandropezzali.it/listino-configuratore/promo/. */
 async function attachFileToPromo(i, file){
   if(!file) return;
   const sizeMB=file.size/(1024*1024);
   if(sizeMB>MAX_FILE_MB){
-    alert(`Il file supera ${MAX_FILE_MB} MB (è ${sizeMB.toFixed(1)} MB). Per evitare un JSON troppo grande, comprimi il PDF o usa un'immagine più leggera.`);
+    alert(`Il file supera ${MAX_FILE_MB} MB (è ${sizeMB.toFixed(1)} MB). Comprimi il PDF o usa un'immagine più leggera.`);
     return;
   }
   // Whitelist esplicita: niente image/* generico (blocca svg+xml e formati esotici).
@@ -303,24 +372,55 @@ async function attachFileToPromo(i, file){
     alert(`Tipo file "${file.type||'sconosciuto'}" non supportato. Usa PDF, JPG, PNG, WebP o GIF.`);
     return;
   }
+  // Senza GitHub configurato non possiamo pushare il binario → blocchiamo subito.
+  const cfg=await ghGetConfig();
+  if(!cfg.token||!cfg.owner||!cfg.repo){
+    alert('Configura prima GitHub: apri "⚙️ Configurazione GitHub", incolla il token e premi Salva configurazione. Senza token non posso pushare il file binario.');
+    $('ghPanel').open=true;
+    $('ghPanel').scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  // Leggo il titolo PRIMA dell'upload: lo slug del nome file ne deriva.
+  readInputsForRow(i);
+  const titleHint=promos[i].title||file.name.replace(/\.[a-z0-9]+$/i,'')||'promo';
+
+  const inp=document.querySelector(`[data-upload="${i}"]`);
+  if(inp) inp.disabled=true;
+  const prevState=$('saveState').innerHTML;
+  $('saveState').innerHTML=`<span class="pill">Caricamento file su GitHub…</span> ${esc(titleHint)}`;
   try{
-    const dataUri=await fileToDataUri(file);
-    readInputsForRow(i);
-    promos[i].url=dataUri;
+    const path=await uploadPromoBinary(cfg, file, titleHint, file.type);
+    // Successo del PUT: ora (e solo ora) modifica il JSON locale.
+    // Nota: se questa promo aveva già un file su GitHub (sostituzione), il file vecchio
+    // resta orfano nella cartella promo/. Cleanup manuale, semplicità implementativa.
+    promos[i].url=path;
     promos[i].type=detectTypeFromMime(file.type);
     promos[i].fileName=file.name;
     promos[i].fileMime=file.type;
     promos[i].fileSize=file.size;
-    if(!promos[i].title) promos[i].title=file.name.replace(/\.(pdf|jpg|jpeg|png|webp|gif)$/i,'');
+    if(!promos[i].title) promos[i].title=titleHint;
     promos[i]=normalize(promos[i]);
+    binariesUploadedThisSession++;
     await saveDraft();
     render();
+    $('saveState').innerHTML=`<span class="pill embedded">✅ Salvato come <code>${esc(path)}</code></span> Premi <b>Pubblica su GitHub</b> per aggiornare anche promo.json.`;
   }catch(e){
-    alert('Errore lettura file: '+e.message);
+    console.error('Upload binario fallito:',e);
+    alert('❌ Upload su GitHub fallito.\n\n'+e.message+'\n\nIl JSON locale NON è stato modificato. Riprova o controlla la console per i dettagli.');
+    $('saveState').innerHTML=prevState;
+    if(inp) inp.disabled=false;
   }
 }
 function clearEmbeddedFile(i){
-  if(!confirm('Rimuovere il file incorporato? Il campo URL/path tornerà vuoto.')) return;
+  const p=promos[i]||{};
+  const isData=isDataUri(p.url);
+  const isManaged=p.url && !isData && p.url.startsWith('promo/');
+  const msg=isData
+    ? 'Rimuovere il file embedded (legacy data: URI) dal JSON? Il campo URL tornerà vuoto.'
+    : (isManaged
+        ? `Rimuovere il riferimento al file ${p.url} dal JSON?\n\nIl file rimarrà su GitHub (cleanup manuale: cancellalo dalla cartella promo/ tramite l'interfaccia web di GitHub).`
+        : 'Rimuovere il file da questa promo? Il campo URL tornerà vuoto.');
+  if(!confirm(msg)) return;
   readInputsForRow(i);
   promos[i].url='';
   promos[i].fileName='';
@@ -408,28 +508,48 @@ function readInputsForRow(i){
 function render(){
   $('rows').innerHTML=promos.map((p0,i)=>{
     const p=normalize(p0);promos[i]=p;
-    const embedded=isDataUri(p.url);
-    const hasUrl=p.url && !embedded;
-    const fileBlock = embedded
-      ? `<div class="fileBox has-file">
+    const dataUri=isDataUri(p.url);
+    const isManagedFile=!!p.url && !dataUri && p.url.startsWith('promo/') && !!p.fileName;
+    const hasFile=dataUri||isManagedFile;
+    const hasManualUrl=!!p.url && !dataUri && !isManagedFile;
+    let fileBlock;
+    if(dataUri){
+      fileBlock=`<div class="fileBox has-file">
            <div class="fileInfo">
              <div class="fileMeta">
-               <span class="pill embedded">FILE INCORPORATO</span>
-               &nbsp;<b>${esc(p.fileName||'(nome non disponibile)')}</b>
-               <div class="small" style="margin-top:4px">Tipo: ${esc(p.fileMime||p.type)} &middot; Dimensione: ${fmtSize(p.fileSize||dataUriBytes(p.url))}</div>
+               <span class="pill warn">EMBEDDED LEGACY</span>
+               &nbsp;<b>${esc(p.fileName||'(senza nome)')}</b>
+               <div class="small" style="margin-top:4px">Tipo: ${esc(p.fileMime||p.type)} &middot; Dimensione: ${fmtSize(p.fileSize||dataUriBytes(p.url))} &middot; <i>data: URI</i></div>
              </div>
-             <button class="danger" data-clear-file="${i}" type="button">Rimuovi file</button>
+             <button class="danger" data-clear-file="${i}" type="button">Rimuovi</button>
            </div>
-           <div class="small">Per sostituirlo, scegli un nuovo file qui sotto.</div>
-           <input type="file" data-upload="${i}" accept="application/pdf,image/*">
-         </div>`
-      : `<div class="fileBox">
-           <div class="fileMeta"><b>Carica un file PDF o un'immagine</b> per incorporarlo nel JSON, oppure inserisci un URL/path qui sotto.</div>
-           <input type="file" data-upload="${i}" accept="application/pdf,image/*">
-           <div class="small">Max ${MAX_FILE_MB} MB per file. Verrà incluso in promo.json come base64.</div>
+           <div class="small">Per migrare a file GitHub: usa il bottone <b>"Migra embedded → file GitHub"</b> in alto, oppure carica un nuovo file qui sotto (sostituisce il data: URI con un path su GitHub).</div>
+           <input type="file" data-upload="${i}" accept="application/pdf,image/jpeg,image/png,image/webp,image/gif">
          </div>`;
-    const urlBlock = embedded
-      ? `<input data-i="${i}" data-f="url" value="${esc(p.url.slice(0,80))}…" disabled style="background:#f3f4f6;color:#9ca3af">`
+    }else if(isManagedFile){
+      fileBlock=`<div class="fileBox has-file">
+           <div class="fileInfo">
+             <div class="fileMeta">
+               <span class="pill embedded">FILE GITHUB</span>
+               &nbsp;<b>${esc(p.fileName||'(senza nome)')}</b>
+               <div class="small" style="margin-top:4px">Tipo: ${esc(p.fileMime||p.type)} &middot; Dimensione: ${fmtSize(p.fileSize||0)} &middot; Path: <code>${esc(p.url)}</code></div>
+             </div>
+             <button class="danger" data-clear-file="${i}" type="button">Rimuovi</button>
+           </div>
+           <div class="small">Per sostituirlo, carica un nuovo file qui sotto. <b>Il file vecchio resta su GitHub</b> (cleanup manuale dalla cartella <code>promo/</code>).</div>
+           <input type="file" data-upload="${i}" accept="application/pdf,image/jpeg,image/png,image/webp,image/gif">
+         </div>`;
+    }else{
+      fileBlock=`<div class="fileBox">
+           <div class="fileMeta"><b>Carica un file PDF o un'immagine</b> per pushrlo su GitHub (cartella <code>promo/</code>), oppure inserisci un URL/path qui sotto.</div>
+           <input type="file" data-upload="${i}" accept="application/pdf,image/jpeg,image/png,image/webp,image/gif">
+           <div class="small">Max ${MAX_FILE_MB} MB per file. Verrà pushato via Contents API. Richiede GitHub configurato.</div>
+         </div>`;
+    }
+    const urlReadOnly=dataUri||isManagedFile;
+    const urlValue=dataUri?(p.url.slice(0,80)+'…'):p.url;
+    const urlBlock = urlReadOnly
+      ? `<input data-i="${i}" data-f="url" value="${esc(urlValue)}" disabled style="background:#f3f4f6;color:#9ca3af">`
       : `<input data-i="${i}" data-f="url" value="${esc(p.url)}" placeholder="es. promo/file.pdf oppure https://...">`;
     return `<div class="row">
       <div class="grid">
@@ -444,14 +564,14 @@ function render(){
       <label>Descrizione<textarea rows="2" data-i="${i}" data-f="description">${esc(p.description)}</textarea></label>
       ${fileBlock}
       <div class="grid">
-        <label>${embedded?'URL (gestito automaticamente)':'File / URL / path'}${urlBlock}</label>
+        <label>${dataUri?'URL (data: legacy, gestito)':isManagedFile?'Path file su GitHub (gestito)':'File / URL / path'}${urlBlock}</label>
         <label>ID<input data-i="${i}" data-f="id" value="${esc(p.id)}"></label>
       </div>
       <div class="grid">
         <label>Data inizio<input type="date" data-i="${i}" data-f="startsAt" value="${esc(p.startsAt)}"></label>
         <label>Scadenza<input type="date" data-i="${i}" data-f="expiresAt" value="${esc(p.expiresAt)}"></label>
       </div>
-      <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'} ${embedded?' &middot; <span class="pill embedded">file embedded</span>':(hasUrl?' &middot; <span class="pill url">URL/path esterno</span>':' &middot; <span class="pill warn">nessun file</span>')}</div>
+      <div class="status ${p.active?'active':'off'}">Stato: ${p.active?'ATTIVA':'DISATTIVATA'} ${dataUri?' &middot; <span class="pill warn">embedded legacy</span>':isManagedFile?' &middot; <span class="pill embedded">file GitHub</span>':hasManualUrl?' &middot; <span class="pill url">URL/path esterno</span>':' &middot; <span class="pill warn">nessun file</span>'}</div>
       <div class="actions">
         <button data-save="${i}">Salva riga</button>
         <button class="${p.active?'danger':'ok'}" data-toggle="${i}">${p.active?'Disattiva':'Riattiva'}</button>
@@ -679,8 +799,15 @@ async function ghPublish(){
       await ghSetSavedSha(data.content&&data.content.sha);
       const shortSha=commitSha.slice(0,7);
       const url=data.commit&&data.commit.html_url;
-      alert(`✅ Pubblicato su GitHub!\n\nCommit: ${shortSha}\n\nGli utenti vedranno l'aggiornamento entro 1-3 minuti (tempo di deploy GitHub Pages). Suggerisci loro di chiudere e riaprire l'app, oppure premere Aggiorna nella sezione Promo.`);
-      $('saveState').innerHTML=`<span class="pill embedded">Pubblicato</span> Commit <code>${esc(shortSha)}</code> ${url?`&middot; <a href="${esc(url)}" target="_blank" rel="noopener">vedi su GitHub</a>`:''}`;
+      // Summary: i binari sono già stati pushati durante l'upload dei file (sessione corrente),
+      // questo publish committa solo il JSON. Mostra il totale combinato per chiarezza.
+      const binariesNote=binariesUploadedThisSession>0
+        ? ` + ${binariesUploadedThisSession} file binar${binariesUploadedThisSession===1?'io':'i'} (commit separati)`
+        : '';
+      alert(`✅ Pubblicato su GitHub!\n\nCommit JSON: ${shortSha}${binariesNote}\n\nGli utenti vedranno l'aggiornamento entro 1-3 minuti (tempo di deploy GitHub Pages). Suggerisci loro di chiudere e riaprire l'app, oppure premere Aggiorna nella sezione Promo.`);
+      $('saveState').innerHTML=`<span class="pill embedded">Pubblicato JSON${binariesNote?' + '+binariesUploadedThisSession+' file binari':''}</span> Commit <code>${esc(shortSha)}</code> ${url?`&middot; <a href="${esc(url)}" target="_blank" rel="noopener">vedi su GitHub</a>`:''}`;
+      // Reset counter dopo publish riuscito.
+      binariesUploadedThisSession=0;
     }else if(rPut.status===409||rPut.status===422){
       const errData=await rPut.json().catch(()=>({}));
       const msg=errData.message||'';
