@@ -491,15 +491,18 @@ function isPromoVisible(p){
 function daysToExpiry(p){const exp=parsePromoDate(promoExpiry(p), true);if(!exp) return null;return Math.ceil((exp-new Date())/(1000*60*60*24));}
 function promoUrl(p){return p.url || '#';}
 function isDataUri(s){return typeof s==='string' && s.startsWith('data:');}
+// URL canonico GitHub Pages: il custom domain (CNAME) è alessandropezzali.it senza www,
+// quindi non leggiamo da location.href (può contenere www. se la PWA è stata installata
+// da quell'host) ma usiamo un URL hardcoded e sempre valido.
+const APP_URL='https://alessandropezzali.it/listino-configuratore/';
 function promoWhatsAppText(p){
   const u=promoUrl(p);
   // I data URI base64 non si possono incollare in WhatsApp (peso e formato).
   // Per le promo con file incorporato condividiamo solo testo + invito ad aprire l'app.
   if(isDataUri(u)){
-    const appLink=new URL('./', location.href).href;
-    return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\nApri l'app: ${appLink}`;
+    return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\nApri l'app: ${APP_URL}`;
   }
-  const link=new URL(u, location.href).href;
+  const link=new URL(u, APP_URL).href;
   return `${p.title || 'Promo'}\n${p.description || ''}\nValida fino al: ${promoExpiry(p) || '—'}\n${link}`;
 }
 function renderPromos(promos){
