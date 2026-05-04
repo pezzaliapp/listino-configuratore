@@ -26,5 +26,19 @@
     "expiresAt": "2026-06-30",
     "active": true,
     "createdAt": "2026-05-04"
+  },
+  {
+    "id": "promo-1777910472891-4qufg",
+    "title": "PIPPO",
+    "description": "IPRIWPRWIRWPRI",
+    "url": "promo/pippo-1777910534895.png",
+    "type": "image",
+    "fileName": "FT-560SN-500x500-1.png",
+    "fileMime": "image/png",
+    "fileSize": 202118,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-04",
+    "active": true,
+    "createdAt": "2026-05-04"
   }
 ]
