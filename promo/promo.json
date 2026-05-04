@@ -54,5 +54,19 @@
     "expiresAt": "2026-05-05",
     "active": false,
     "createdAt": "2026-05-03"
+  },
+  {
+    "id": "promo-1777897570023-gyal0",
+    "title": "Nuova promo",
+    "description": "jjjjopjp",
+    "url": "promo/nuova-promo-1777897614665.png",
+    "type": "image",
+    "fileName": "Screenshot 2026-05-02 082139.png",
+    "fileMime": "image/png",
+    "fileSize": 1067794,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-04",
+    "active": true,
+    "createdAt": "2026-05-04"
   }
 ]
