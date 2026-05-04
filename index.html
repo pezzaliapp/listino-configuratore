@@ -614,7 +614,7 @@ async function loadPromos(){
 
   // 3) Per gli utenti finali: legge il promo.json pubblicato.
   try{
-    const res=await fetch('./promo/promo.json',{cache:'no-store'});
+    const res=await fetch('./promo/promo.json?t='+Date.now(),{cache:'no-store'});
     if(!res.ok) throw new Error('promo.json non trovato');
     const data=await res.json();
     renderPromos(data);
@@ -873,7 +873,13 @@ if('serviceWorker' in navigator){
 }
 updatePdfStatus();
 loadPromos();
-setInterval(()=>{ if(document.visibilityState==='visible') loadPromos(); },60000);
+function refreshPromosBypass(){
+  if(document.visibilityState!=='visible') return;
+  loadPromos();
+}
+setInterval(refreshPromosBypass,30000);
+document.addEventListener('visibilitychange',refreshPromosBypass);
+window.addEventListener('focus',refreshPromosBypass);
 load();
 </script>
 </body>
