@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com https://cdn.jsdelivr.net data: blob:; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://api.github.com https://raw.githubusercontent.com https://cdn.jsdelivr.net data: blob:; frame-src 'self' blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Listino PRO">
@@ -511,6 +511,7 @@ function isDataUri(s){return typeof s==='string' && s.startsWith('data:');}
 // quindi non leggiamo da location.href (può contenere www. se la PWA è stata installata
 // da quell'host) ma usiamo un URL hardcoded e sempre valido.
 const APP_URL='https://alessandropezzali.it/listino-configuratore/';
+const PROMO_JSON_RAW='https://raw.githubusercontent.com/pezzaliapp/listino-configuratore/main/promo/promo.json';
 const PROMO_DISCLAIMER='Prezzi netti riservati al rivenditore. Non includono IVA 22%, trasporto EX WORK, installazione. Non destinati al cliente finale.';
 function promoWhatsAppText(p){
   const u=promoUrl(p);
@@ -550,7 +551,7 @@ function renderPromos(promos){
       openPromoModal(p);
       return;
     }
-    window.open(url,'_blank','noopener');
+    window.open(new URL(url, APP_URL).href,'_blank','noopener');
   });
   els.promoList.querySelectorAll('[data-promo-wa]').forEach(btn=>btn.onclick=()=>{
     const p=visible.find(x=>promoId(x)===btn.dataset.promoWa);
@@ -590,32 +591,42 @@ async function readAdminPromoDraftIdb(){
     return null;
   }
 }
+async function fetchPromoJson(){
+  const urls=[
+    new URL('./promo/promo.json', APP_URL).href,
+    PROMO_JSON_RAW
+  ];
+  let lastErr=null;
+  for(const base of urls){
+    try{
+      const res=await fetch(base+(base.includes('?')?'&':'?')+'t='+Date.now(),{
+        cache:'no-store',
+        headers:{'Cache-Control':'no-cache','Pragma':'no-cache'}
+      });
+      if(!res.ok) throw new Error(`${res.status} ${res.statusText} su ${base}`);
+      const data=await res.json();
+      if(!Array.isArray(data)) throw new Error('promo.json non contiene un array');
+      return data;
+    }catch(e){
+      lastErr=e;
+      console.warn('Promo fetch fallito:', e);
+    }
+  }
+  throw lastErr || new Error('promo.json non leggibile');
+}
 async function loadPromos(){
   if(!els.promoList) return;
   els.promoList.innerHTML='<div class="promoEmpty">Caricamento promo...</div>';
 
-  // 1) Bozza admin in IndexedDB (nuovo formato con file incorporati)
-  const idbDraft=await readAdminPromoDraftIdb();
-  if(idbDraft){
-    renderPromos(idbDraft);
-    return;
-  }
-  // 2) Bozza admin legacy in localStorage
-  const localDraft=readAdminPromoDraft();
-  if(localDraft){
-    renderPromos(localDraft);
-    return;
-  }
-
-  // 3) Per gli utenti finali: legge il promo.json pubblicato.
+  // L'app utente deve leggere SEMPRE la versione pubblicata.
+  // Le bozze admin locali non devono mai sovrascrivere GitHub, altrimenti
+  // un dispositivo continua a vedere promo vecchie finché non pulisce cache/IndexedDB.
   try{
-    const res=await fetch('./promo/promo.json?t='+Date.now(),{cache:'no-store',headers:{'Cache-Control':'no-cache'}});
-    if(!res.ok) throw new Error('promo.json non trovato');
-    const data=await res.json();
+    const data=await fetchPromoJson();
     renderPromos(data);
   }catch(e){
     console.warn(e);
-    els.promoList.innerHTML='<div class="promoEmpty">Non riesco a leggere <b>promo/promo.json</b>. Verifica che il file sia presente nella repo.</div>';
+    els.promoList.innerHTML='<div class="promoEmpty">Non riesco a leggere <b>promo/promo.json</b>. Verifica pubblicazione GitHub e connessione.</div>';
   }
 }
 
@@ -850,6 +861,10 @@ if('serviceWorker' in navigator){
 }
 updatePdfStatus();
 loadPromos();
+// Aggiornamento automatico promo: utile per app installate/PWA senza chiedere svuotamento cache.
+setInterval(loadPromos, 60000);
+window.addEventListener('focus', loadPromos);
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) loadPromos(); });
 load();
 </script>
 </body>
