@@ -166,6 +166,11 @@ tr:hover td{background:#fafafa}
 </head>
 <body>
 
+<div id="updateBanner" class="hide" role="alert" style="position:fixed;top:0;left:0;right:0;background:#1F2A44;color:#fff;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));padding-left:calc(16px + env(safe-area-inset-left));padding-right:calc(16px + env(safe-area-inset-right));display:flex;gap:12px;justify-content:space-between;align-items:center;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,0.2);font-weight:600">
+  <span style="flex:1;min-width:0">📢 È disponibile una nuova versione dell'app</span>
+  <button id="updateNowBtn" type="button" style="background:#10b981;color:#fff;border:0;padding:8px 16px;border-radius:8px;font-weight:700;cursor:pointer;flex:0 0 auto">Aggiorna ora</button>
+</div>
+
 <div id="legalModal" class="modalOverlay hide">
   <div class="modalBox">
     <h2>Utilizzo applicazione</h2>
@@ -838,9 +843,37 @@ document.getElementById('acceptLegal').onclick=()=>{
   els.legalModal.classList.add('hide');
 };
 if(localStorage.getItem('listino_configuratore_legal_ok')!=='true') els.legalModal.classList.remove('hide');
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    setInterval(()=>{ try{ reg.update(); }catch(_){} },60000);
+    const showBanner=()=>{ const b=document.getElementById('updateBanner'); if(b) b.classList.remove('hide'); };
+    if(reg.waiting && navigator.serviceWorker.controller) showBanner();
+    reg.addEventListener('updatefound',()=>{
+      const nw=reg.installing;
+      if(!nw) return;
+      nw.addEventListener('statechange',()=>{
+        if(nw.state==='installed' && navigator.serviceWorker.controller) showBanner();
+      });
+    });
+  }).catch(()=>{});
+  const btn=document.getElementById('updateNowBtn');
+  if(btn) btn.onclick=()=>{
+    btn.disabled=true;
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      if(reg && reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+      else window.location.reload();
+    });
+  };
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(refreshing) return;
+    refreshing=true;
+    window.location.reload();
+  });
+}
 updatePdfStatus();
 loadPromos();
+setInterval(()=>{ if(document.visibilityState==='visible') loadPromos(); },60000);
 load();
 </script>
 </body>
