@@ -54,5 +54,19 @@
     "expiresAt": "2026-05-05",
     "active": false,
     "createdAt": "2026-05-03"
+  },
+  {
+    "id": "promo-1777897016294-detqz",
+    "title": "Transpotec",
+    "description": "offerta fiera",
+    "url": "",
+    "type": "pdf",
+    "fileName": "",
+    "fileMime": "",
+    "fileSize": 0,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-04",
+    "active": true,
+    "createdAt": "2026-05-04"
   }
 ]
