@@ -1,3 +1,4 @@
+// DISMESSO - non più usato, vedi index.html
 const CACHE='listino-configuratore-pro-promo-embedded-v21';
 const ASSETS=['./','./index.html','./admin-promo.html','./manifest.webmanifest','./icon.svg'];
 
