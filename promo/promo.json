@@ -68,5 +68,19 @@
     "expiresAt": "2026-05-04",
     "active": true,
     "createdAt": "2026-05-04"
+  },
+  {
+    "id": "promo-1777899700311-psbyl",
+    "title": "ORE 15 PROVA INVIO",
+    "description": "PTIWTPWITWPITWPTW",
+    "url": "promo/ore-15-prova-invio-1777899750230.png",
+    "type": "image",
+    "fileName": "Screenshot 2026-05-03 alle 13.32.47.png",
+    "fileMime": "image/png",
+    "fileSize": 1097945,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-04",
+    "active": true,
+    "createdAt": "2026-05-04"
   }
 ]
