@@ -36,9 +36,9 @@
     "fileName": "icon-192.png",
     "fileMime": "image/png",
     "fileSize": 718,
-    "startsAt": "2026-05-03",
-    "expiresAt": "2026-05-03",
-    "active": false,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-05",
+    "active": true,
     "createdAt": "2026-05-03"
   },
   {
@@ -52,21 +52,7 @@
     "fileSize": 386256,
     "startsAt": "2026-05-04",
     "expiresAt": "2026-05-05",
-    "active": false,
-    "createdAt": "2026-05-03"
-  },
-  {
-    "id": "promo-1777897570023-gyal0",
-    "title": "Nuova promo",
-    "description": "jjjjopjp",
-    "url": "promo/nuova-promo-1777897721631.pdf",
-    "type": "pdf",
-    "fileName": "B 300 equilibratrice depliant.pdf",
-    "fileMime": "application/pdf",
-    "fileSize": 3017943,
-    "startsAt": "2026-05-04",
-    "expiresAt": "2026-05-04",
     "active": true,
-    "createdAt": "2026-05-04"
+    "createdAt": "2026-05-03"
   }
 ]
