@@ -54,5 +54,19 @@
     "expiresAt": "2026-05-05",
     "active": true,
     "createdAt": "2026-05-03"
+  },
+  {
+    "id": "promo-1777898067637-q87ix",
+    "title": "alelale",
+    "description": "wtgkwgtkwgtkwgtwkgt",
+    "url": "promo/alelale-1777898090992.jpg",
+    "type": "image",
+    "fileName": "cubo.jpg",
+    "fileMime": "image/jpeg",
+    "fileSize": 62027,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-04",
+    "active": true,
+    "createdAt": "2026-05-04"
   }
 ]
