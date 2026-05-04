@@ -9,7 +9,7 @@
     "fileMime": "",
     "fileSize": 0,
     "startsAt": "2026-04-29",
-    "expiresAt": "2026-07-30",
+    "expiresAt": "2026-06-30",
     "active": true,
     "createdAt": "2026-04-29"
   },
@@ -24,7 +24,7 @@
     "fileSize": 0,
     "startsAt": "2026-04-29",
     "expiresAt": "2026-06-30",
-    "active": true,
+    "active": false,
     "createdAt": "2026-04-29"
   },
   {
@@ -81,6 +81,20 @@
     "startsAt": "2026-05-04",
     "expiresAt": "2026-05-04",
     "active": false,
+    "createdAt": "2026-05-04"
+  },
+  {
+    "id": "promo-1777907900822-i9nej",
+    "title": "B 224 + Helper B + B 300",
+    "description": "Promo combinata prevendita esclusiva con consegne da luglio 2026.",
+    "url": "promo/b-224-helper-b-b-300-1777908119108.pdf",
+    "type": "pdf",
+    "fileName": "prevendita B 224 + helper + B 300 RAL 7016 mod.pdf",
+    "fileMime": "application/pdf",
+    "fileSize": 2751288,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-06-30",
+    "active": true,
     "createdAt": "2026-05-04"
   }
 ]
