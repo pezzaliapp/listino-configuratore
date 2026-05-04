@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "promo-1777918879463-getwf",
+    "title": "prova",
+    "description": "prova pinco pallo",
+    "url": "",
+    "type": "pdf",
+    "fileName": "",
+    "fileMime": "",
+    "fileSize": 0,
+    "startsAt": "2026-05-04",
+    "expiresAt": "2026-05-04",
+    "active": true,
+    "createdAt": "2026-05-04"
+  }
+]
